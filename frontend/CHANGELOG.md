@@ -8,6 +8,7 @@ Este projeto segue um formato próximo de Keep a Changelog.
 
 ### Added
 
+- Screenshots automáticos (`npm run screenshots`, Puppeteer): login via API, dados de demonstração, temas claro/escuro e mobile/desktop; docs em `docs/SCREENSHOTS.md`.
 - Governança base para templates Angular da organização.
 - Templates de issue e pull request.
 - Validações de GitHub Actions e Dependabot.
