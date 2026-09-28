@@ -1,0 +1,19 @@
+.backBtn {
+  border-radius: 0.4rem !important;
+  font-size: 1rem;
+  background: rgba(255, 184, 77, 0.08) !important;
+  border-color: rgba(255, 184, 77, 0.45) !important;
+  color: var(--color-amarelo-bold) !important;
+  transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease !important;
+
+  .p-button-icon,
+  .p-button-label {
+    color: var(--color-amarelo-bold) !important;
+  }
+
+  &:hover {
+    background: rgba(255, 184, 77, 0.08) !important;
+    border-color: var(--color-amarelo-bold) !important;
+    transform: translateX(-2px);
+  }
+}

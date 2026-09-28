@@ -1,0 +1,13 @@
+@if (visible()) {
+  <button
+    pButton
+    type="button"
+    severity="secondary"
+    class="backBtn"
+    (click)="goBack()"
+    aria-label="Voltar para a página anterior"
+  >
+    <app-icon name="arrow-left" size="16" aria-hidden="true" />
+    <span>Voltar</span>
+  </button>
+}

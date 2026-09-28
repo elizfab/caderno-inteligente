@@ -1,0 +1,45 @@
+// O footer fica sempre no fim da viewport: .app-main é flex-column com
+// min-height 100vh e .app-content usa flex: 1 (ver app.scss), então o
+// footer é empurrado para o bottom mesmo em páginas curtas.
+.footer {
+  margin-top: auto;
+  padding: 0 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  color: var(--color-text-primary);
+  background: var(--color-footer-bg);
+}
+
+.container {
+  width: 100%;
+  border-top: 1px solid var(--color-border-subtle);
+  margin-inline: auto;
+  display: flex;
+  justify-content: center;
+  padding: 0.75rem 0;
+}
+
+.content {
+  text-align: center;
+  color: var(--color-text-secondary);
+
+  p {
+    margin: 0.35rem 0;
+    font-size: 0.9rem;
+  }
+
+  .dev {
+    color: var(--color-primary);
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .footer {
+    padding: 0 1rem;
+  }
+
+  .content p {
+    font-size: 0.8rem;
+  }
+}

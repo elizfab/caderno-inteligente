@@ -1,0 +1,273 @@
+<div class="dashboard" role="region" aria-label="Painel de controle">
+
+  <!-- ── Boas-vindas ────────────────────────────────────────────────────── -->
+  <section class="welcome" aria-label="Boas-vindas">
+    <div class="welcome__text">
+      <h2 class="welcome__title">Olá, {{ firstName() }} 👋</h2>
+      <p class="welcome__subtitle">
+        Aqui está o resumo dos seus estudos — continue de onde parou.
+      </p>
+    </div>
+    <div class="welcome__quick">
+      <button pButton type="button" class="btn-primary welcome__btn" (click)="openAddModal()">
+        <app-icon name="plus" size="16" aria-hidden="true" />
+        <span>Adicionar curso</span>
+      </button>
+      <button pButton type="button" severity="secondary" class="welcome__btn" (click)="navigateToSection('estudos-labs')">
+        <app-icon name="graduation-cap" size="16" aria-hidden="true" />
+        <span>Ver trilhas</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ── KPIs ───────────────────────────────────────────────────────────── -->
+  <section class="heroStats" aria-label="Indicadores gerais">
+    <div class="statCard statCard--total">
+      <span class="statCard__icon" aria-hidden="true"><app-icon name="book-open" size="20" /></span>
+      <div class="statCard__body">
+        <span class="statCard__value">{{ totalItems }}</span>
+        <span class="statCard__label">Total de cursos</span>
+      </div>
+    </div>
+    <div class="statCard statCard--progress">
+      <span class="statCard__icon" aria-hidden="true"><app-icon name="activity" size="20" /></span>
+      <div class="statCard__body">
+        <span class="statCard__value">{{ inProgressItems }}</span>
+        <span class="statCard__label">Em andamento</span>
+      </div>
+    </div>
+    <div class="statCard statCard--done">
+      <span class="statCard__icon" aria-hidden="true"><app-icon name="circle-check" size="20" /></span>
+      <div class="statCard__body">
+        <span class="statCard__value">{{ completedItems }}</span>
+        <span class="statCard__label">Concluídos</span>
+      </div>
+    </div>
+    <div class="statCard statCard--sections">
+      <span class="statCard__icon" aria-hidden="true"><app-icon name="layout-dashboard" size="20" /></span>
+      <div class="statCard__body">
+        <span class="statCard__value">{{ activeSections }}</span>
+        <span class="statCard__label">Seções ativas</span>
+      </div>
+    </div>
+    <div class="statCard statCard--rate">
+      <span class="statCard__icon" aria-hidden="true"><app-icon name="chart-pie" size="20" /></span>
+      <div class="statCard__body">
+        <span class="statCard__value">{{ completionRate }}%</span>
+        <span class="statCard__label">Taxa de conclusão</span>
+        <p-progressBar [value]="completionRate" [showValue]="false" styleClass="statCard__bar" />
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Grid principal ─────────────────────────────────────────────────── -->
+  <div class="mainGrid">
+
+    <!-- Coluna esquerda: seções + atividade recente -->
+    <div class="sectionsCol">
+      <h3 class="colTitle">
+        <app-icon name="graduation-cap" size="18" aria-hidden="true" />
+        Seções de estudo
+      </h3>
+
+      <div class="sectionCards">
+        @for (sec of sections; track sec.slug) {
+          <button
+            type="button"
+            class="sectionCard"
+            (click)="navigateToSection(sec.slug)"
+            [attr.aria-label]="'Abrir seção ' + sec.label"
+          >
+            <div class="sectionCard__banner" [style.background]="getSectionAccent(sec)" aria-hidden="true">
+              <app-icon [name]="sec.iconClass" size="20" />
+            </div>
+            <div class="sectionCard__body">
+              <span class="sectionCard__name">{{ sec.label }}</span>
+              <span class="sectionCard__count">
+                {{ getSectionItems(sec.slug).length }} curso{{ getSectionItems(sec.slug).length !== 1 ? 's' : '' }}
+              </span>
+              <p-progressBar
+                [value]="getSectionProgress(sec.slug)"
+                [showValue]="false"
+                [style.--bar-color]="getSectionAccent(sec)">
+              </p-progressBar>
+              <span class="sectionCard__progress">{{ getSectionProgress(sec.slug) }}% concluído</span>
+            </div>
+          </button>
+        }
+      </div>
+
+      <!-- Atividade recente -->
+      <p-card styleClass="panelCard" role="region" aria-label="Atividade recente">
+        <ng-template #title>
+          <span class="panelCard__title">
+            <app-icon name="history" size="17" aria-hidden="true" />
+            Atividade recente
+          </span>
+        </ng-template>
+
+        @if (recentItems().length) {
+          <p-table
+            [value]="recentItems()"
+            [tableStyle]="{ 'min-width': '30rem' }"
+            styleClass="p-datatable-sm"
+          >
+            <ng-template #header>
+              <tr>
+                <th scope="col">Curso</th>
+                <th scope="col">Seção</th>
+                <th scope="col">Status</th>
+                <th scope="col">Data</th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-item>
+              <tr class="recentRow" (click)="openItem(item)">
+                <td class="recentRow__name">{{ item.courseName }}</td>
+                <td>{{ getSectionLabel(item.section) }}</td>
+                <td><p-tag [value]="item.status" [severity]="getStatusSeverity(item.status)" /></td>
+                <td>{{ item.date }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        } @else {
+          <div class="panelCard__empty">
+            <app-icon name="inbox" size="26" aria-hidden="true" />
+            <span>Nenhuma atividade ainda — cadastre seu primeiro curso.</span>
+          </div>
+        }
+      </p-card>
+    </div>
+
+    <!-- Coluna direita: gráficos + ranking -->
+    <div class="chartsCol">
+
+      <p-card styleClass="panelCard" role="region" aria-label="Distribuição por status">
+        <ng-template #title>
+          <span class="panelCard__title">
+            <app-icon name="chart-pie" size="17" aria-hidden="true" />
+            Distribuição por status
+          </span>
+        </ng-template>
+        @if (statusChartData) {
+          <div class="chartWrap">
+            <p-chart type="doughnut" [data]="statusChartData" [options]="statusChartOptions" height="240" />
+          </div>
+        } @else {
+          <div class="panelCard__empty">
+            <app-icon name="chart-pie" size="26" aria-hidden="true" />
+            <span>Nenhum dado ainda</span>
+          </div>
+        }
+      </p-card>
+
+      <p-card styleClass="panelCard" role="region" aria-label="Evolução dos últimos seis meses">
+        <ng-template #title>
+          <span class="panelCard__title">
+            <app-icon name="trending-up" size="17" aria-hidden="true" />
+            Evolução — últimos 6 meses
+          </span>
+        </ng-template>
+        @if (evolutionChartData) {
+          <div class="chartWrap">
+            <p-chart type="line" [data]="evolutionChartData" [options]="evolutionChartOptions" height="200" />
+          </div>
+        } @else {
+          <div class="panelCard__empty">
+            <app-icon name="chart-line" size="26" aria-hidden="true" />
+            <span>Nenhum dado ainda</span>
+          </div>
+        }
+      </p-card>
+
+      <p-card styleClass="panelCard" role="region" aria-label="Seções com mais cursos">
+        <ng-template #title>
+          <span class="panelCard__title">
+            <app-icon name="star" size="17" aria-hidden="true" />
+            Top seções
+          </span>
+        </ng-template>
+        @if (topSections().length) {
+          <ol class="topList">
+            @for (sec of topSections(); track sec.slug; let i = $index) {
+              <li class="topList__item">
+                <span class="topList__rank">{{ i + 1 }}</span>
+                <span class="topList__label">{{ sec.label }}</span>
+                <span class="topList__count">{{ sec.count }}</span>
+              </li>
+            }
+          </ol>
+        } @else {
+          <div class="panelCard__empty">
+            <app-icon name="star" size="26" aria-hidden="true" />
+            <span>Cadastre cursos para ver o ranking</span>
+          </div>
+        }
+      </p-card>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Modal: Adicionar curso ─────────────────────────────────────────────── -->
+<p-dialog
+  [(visible)]="addModalVisible"
+  header="Adicionar curso"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="studyModal"
+  [style]="{ width: '480px' }">
+
+  <form class="form" (ngSubmit)="saveItem()" aria-label="Formulário de novo curso">
+    <label class="field">
+      <span>Seção</span>
+      <select class="field__select" [(ngModel)]="addForm.section" name="section" (ngModelChange)="onSectionChange()">
+        <option value="">Selecione uma seção</option>
+        @for (sec of sections; track sec.slug) {
+          <option [value]="sec.slug">{{ sec.label }}</option>
+        }
+      </select>
+    </label>
+
+    <label class="field">
+      <span>Tópico</span>
+      <select class="field__select" [(ngModel)]="addForm.topic" name="topic" [disabled]="!availableTopics.length">
+        <option value="">Selecione um tópico</option>
+        @for (topic of availableTopics; track topic.slug) {
+          <option [value]="topic.slug">{{ topic.label }}</option>
+        }
+      </select>
+    </label>
+
+    <label class="field">
+      <span>Nome do curso</span>
+      <input pInputText name="courseName" [(ngModel)]="addForm.courseName" placeholder="Ex: Redis Fundamentals" />
+    </label>
+
+    <label class="field">
+      <span>URL (opcional)</span>
+      <input pInputText name="url" [(ngModel)]="addForm.url" placeholder="https://..." />
+    </label>
+
+    <label class="field">
+      <span>Status</span>
+      <select class="field__select" [(ngModel)]="addForm.status" name="status">
+        @for (s of statusOptions; track s) {
+          <option [value]="s">{{ s }}</option>
+        }
+      </select>
+    </label>
+
+    <footer class="formActions">
+      <button pButton type="button" class="btn-cancel" (click)="addModalVisible = false">
+        <span>Cancelar</span>
+      </button>
+      <button pButton type="submit" class="btn-primary"
+        [disabled]="!addForm.section || !addForm.topic || !addForm.courseName || saving()">
+        <app-icon name="check" size="16" aria-hidden="true" />
+        <span>Salvar conteúdo</span>
+      </button>
+    </footer>
+  </form>
+</p-dialog>

@@ -1,0 +1,65 @@
+.comingSoon {
+  padding: clamp(1rem, 3vw, 2rem);
+
+  &__header {
+    margin-bottom: 2rem;
+  }
+
+  &__topRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.25rem;
+  }
+
+  &__eyebrow {
+    display: inline-block;
+    margin-bottom: 0.5rem;
+    color: var(--color-status-warning);
+    font-size: 0.875rem;
+    font-weight: 700;
+    letter-spacing: 0.08rem;
+    text-transform: uppercase;
+  }
+
+  &__title {
+    margin: 0;
+    color: var(--color-text-primary, #111827);
+    font-size: clamp(2rem, 4vw, 2.5rem);
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  &__description {
+    max-width: 42rem;
+    margin-top: 0.75rem;
+    color: var(--color-text-secondary, #6b7280);
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.25rem;
+    padding: 4rem 2rem;
+    border: 2px dashed var(--surface-border, #e5e7eb);
+    border-radius: 1rem;
+    text-align: center;
+  }
+
+  &__icon {
+    font-size: 3rem;
+    color: var(--color-text-secondary, #9ca3af);
+
+    &::before { display: block; }
+  }
+
+  &__text {
+    font-size: 1.125rem;
+    color: var(--color-text-secondary, #6b7280);
+    margin: 0;
+  }
+}

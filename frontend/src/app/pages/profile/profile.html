@@ -1,0 +1,158 @@
+<section class="profile" role="region" aria-label="Meu perfil">
+  <header class="profile__head">
+    <h2 class="profile__title">Meu Perfil</h2>
+    <a routerLink="/dashboard" class="btn-accent-outline profile__back">
+      <app-icon name="arrow-left" size="16" aria-hidden="true" />
+      <span>Voltar</span>
+    </a>
+  </header>
+
+  <div class="profile__grid">
+    <!-- Dados pessoais -->
+    <form class="profile__card" (ngSubmit)="saveProfile()" novalidate>
+      <h3 class="profile__cardTitle">
+        <app-icon name="user" size="18" aria-hidden="true" /> Dados pessoais
+      </h3>
+
+      @if (profileError()) {
+        <div class="profile__error" role="alert">
+          <app-icon name="circle-alert" size="16" aria-hidden="true" />
+          <span>{{ profileError() }}</span>
+        </div>
+      }
+      @if (profileMessage()) {
+        <div class="profile__success" role="status" aria-live="polite">
+          <app-icon name="circle-check" size="16" aria-hidden="true" />
+          <span>{{ profileMessage() }}</span>
+        </div>
+      }
+
+      <div class="profile__avatar">
+        <div class="profile__avatarPreview" aria-hidden="true">
+          @if (avatarPreview()) {
+            <img [src]="avatarPreview()" alt="" />
+          } @else {
+            <app-icon name="user" size="32" />
+          }
+        </div>
+        <label class="profile__avatarUpload">
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            (change)="onAvatarSelected($event)"
+            hidden
+          />
+          <span class="btn-accent-outline">
+            <app-icon name="upload" size="16" aria-hidden="true" />
+            <span>Alterar avatar</span>
+          </span>
+        </label>
+      </div>
+
+      <label class="profile__field">
+        <span>Nome completo</span>
+        <input pInputText name="name" [(ngModel)]="name" [disabled]="savingProfile()" required />
+      </label>
+
+      <label class="profile__field">
+        <span>Telefone</span>
+        <input
+          pInputText
+          name="phone"
+          [(ngModel)]="phone"
+          (ngModelChange)="onPhoneInput()"
+          placeholder="(11) 99999-9999"
+          inputmode="tel"
+          [disabled]="savingProfile()"
+        />
+      </label>
+
+      <label class="profile__field">
+        <span>E-mail (não editável)</span>
+        <input pInputText name="email" [ngModel]="email" [disabled]="true" readonly />
+      </label>
+
+      <div class="formActions">
+        <button pButton type="submit" class="btn-primary" [disabled]="savingProfile()">
+          @if (savingProfile()) {
+            <app-icon name="loader-circle" size="16" [spin]="true" aria-hidden="true" />
+            <span>Salvando…</span>
+          } @else {
+            <app-icon name="check" size="16" aria-hidden="true" />
+            <span>Salvar</span>
+          }
+        </button>
+      </div>
+    </form>
+
+    <!-- Senha -->
+    <form class="profile__card" (ngSubmit)="changePassword()" novalidate>
+      <h3 class="profile__cardTitle">
+        <app-icon name="lock" size="18" aria-hidden="true" /> Alterar senha
+      </h3>
+
+      @if (passwordError()) {
+        <div class="profile__error" role="alert">
+          <app-icon name="circle-alert" size="16" aria-hidden="true" />
+          <span>{{ passwordError() }}</span>
+        </div>
+      }
+      @if (passwordMessage()) {
+        <div class="profile__success" role="status" aria-live="polite">
+          <app-icon name="circle-check" size="16" aria-hidden="true" />
+          <span>{{ passwordMessage() }}</span>
+        </div>
+      }
+
+      <label class="profile__field">
+        <span>Senha atual</span>
+        <p-password
+          name="currentPassword"
+          [(ngModel)]="currentPassword"
+          [feedback]="false"
+          [toggleMask]="true"
+          [inputStyle]="{ width: '100%' }"
+          [disabled]="savingPassword()"
+          required
+        />
+      </label>
+
+      <label class="profile__field">
+        <span>Nova senha</span>
+        <p-password
+          name="newPassword"
+          [(ngModel)]="newPassword"
+          [toggleMask]="true"
+          [inputStyle]="{ width: '100%' }"
+          [disabled]="savingPassword()"
+          required
+        />
+      </label>
+
+      <label class="profile__field">
+        <span>Confirmar nova senha</span>
+        <p-password
+          name="confirmPassword"
+          [(ngModel)]="confirmPassword"
+          [feedback]="false"
+          [toggleMask]="true"
+          [inputStyle]="{ width: '100%' }"
+          [disabled]="savingPassword()"
+          required
+        />
+      </label>
+
+      <div class="formActions">
+        <button pButton type="submit" class="btn-primary" [disabled]="savingPassword()">
+          @if (savingPassword()) {
+            <app-icon name="loader-circle" size="16" [spin]="true" aria-hidden="true" />
+            <span>Alterando…</span>
+          } @else {
+            <app-icon name="key" size="16" aria-hidden="true" />
+            <span>Alterar senha</span>
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+</section>

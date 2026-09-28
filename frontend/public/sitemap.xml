@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>/dashboard</loc><priority>1.0</priority></url>
+  <url><loc>/estudos-labs</loc><priority>0.9</priority></url>
+  <url><loc>/backend</loc><priority>0.8</priority></url>
+  <url><loc>/banco-de-dados</loc><priority>0.8</priority></url>
+  <url><loc>/cloud</loc><priority>0.8</priority></url>
+  <url><loc>/containers-kubernetes</loc><priority>0.8</priority></url>
+  <url><loc>/devops</loc><priority>0.8</priority></url>
+  <url><loc>/frontend</loc><priority>0.8</priority></url>
+  <url><loc>/inteligencia-artificial</loc><priority>0.8</priority></url>
+  <url><loc>/observability</loc><priority>0.8</priority></url>
+  <url><loc>/performance-engineering</loc><priority>0.8</priority></url>
+  <url><loc>/projetos</loc><priority>0.9</priority></url>
+  <url><loc>/projetos/pessoais</loc><priority>0.8</priority></url>
+  <url><loc>/projetos/profissionais</loc><priority>0.8</priority></url>
+  <url><loc>/rollout-service</loc><priority>0.7</priority></url>
+</urlset>

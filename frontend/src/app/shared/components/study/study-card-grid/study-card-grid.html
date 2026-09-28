@@ -1,0 +1,97 @@
+<section class="studyPage" role="region" [attr.aria-label]="pageTitle">
+  <header class="studyPage__header">
+    <div class="studyPage__topRow">
+      <app-back-button></app-back-button>
+      <ng-content select="[slot='header-actions']"></ng-content>
+    </div>
+    <div class="studyPage__headerBottom">
+      <h1 class="studyPage__title">{{ pageTitle }}</h1>
+      <p class="studyPage__description">{{ pageDescription }}</p>
+    </div>
+  </header>
+
+  <ul class="studyGrid" role="list" aria-label="Lista de estudos">
+    @for (item of items; track item.id) {
+      <li role="listitem" class="studyGrid__item">
+        <article class="studyCard" [style.--card-accent]="getAccentColor(item)">
+          <div
+            class="studyCard__imageWrapper"
+            [style.background]="item.bannerColor || 'var(--color-border-subtle)'"
+          >
+            @if (item.imageUrl) {
+              <img
+                class="studyCard__image"
+                [src]="item.imageUrl"
+                [alt]="item.title"
+                (error)="onImageError($event)"
+              />
+            }
+
+            <span class="studyCard__icon" aria-hidden="true">
+              @if (item.iconUrl) {
+                <img
+                  #iconImg
+                  class="studyCard__iconImg"
+                  [src]="item.iconUrl"
+                  [alt]="item.title"
+                  (error)="iconImg.style.display='none'"
+                />
+              } @else {
+                <app-icon [name]="item.iconClass" size="22" />
+              }
+            </span>
+
+            @if (item.apiId) {
+              <button
+                class="studyCard__deleteBtn"
+                type="button"
+                pTooltip="Excluir item"
+                tooltipPosition="top"
+                (click)="requestDelete(item, $event)"
+                aria-label="Excluir {{ item.title }}"
+              >
+                <app-icon name="trash-2" size="15" aria-hidden="true" />
+              </button>
+              <button
+                class="studyCard__editBtn"
+                type="button"
+                pTooltip="Editar item"
+                tooltipPosition="top"
+                (click)="requestEdit(item, $event)"
+                aria-label="Editar {{ item.title }}"
+              >
+                <app-icon name="pencil" size="15" aria-hidden="true" />
+              </button>
+            }
+          </div>
+
+          <div class="studyCard__content">
+            <h2 class="studyCard__title">{{ item.title }}</h2>
+
+            <p class="studyCard__description">
+              {{ item.description }}
+            </p>
+
+            <span class="studyCard__skill">{{ item.skill }}</span>
+
+            <a
+              pButton
+              [routerLink]="item.detailRoute"
+              [label]="item.buttonLabel ?? 'Abrir Trilha'"
+              class="studyCard__button"
+              [attr.aria-label]="(item.buttonLabel ?? 'Abrir Trilha') + ': ' + item.title"
+            ></a>
+          </div>
+        </article>
+      </li>
+    } @empty {
+      <li class="studyGrid__empty" role="listitem">
+        <span class="studyGrid__emptyIcon" aria-hidden="true">
+          <app-icon name="inbox" size="34" />
+        </span>
+        <p class="studyGrid__emptyText">Nenhum item cadastrado ainda.</p>
+        <p class="studyGrid__emptyHint">Use o botão no topo da página para adicionar o primeiro.</p>
+      </li>
+    }
+  </ul>
+</section>

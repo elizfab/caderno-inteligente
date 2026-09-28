@@ -1,0 +1,21 @@
+.page-container {
+  padding: 16px clamp(0.2rem, 1vw, 0.5rem);
+}
+
+h1 {
+  color: var(--color-text-primary);
+  margin-bottom: 1rem;
+}
+
+p {
+  color: var(--color-text-secondary);
+}
+
+.formActions {
+  display: flex;
+  justify-content: space-between;
+
+  .p-button {
+    width: 100%;
+  }
+}

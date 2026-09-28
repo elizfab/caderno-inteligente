@@ -1,0 +1,206 @@
+<div class="categoryPage">
+  <header class="categoryPage__header">
+    <div class="categoryPage__topRow">
+      <app-back-button></app-back-button>
+    </div>
+
+    <nav class="breadcrumb" aria-label="Caminho">
+      <a routerLink="/dashboard" class="breadcrumb__item">Dashboard</a>
+      <span class="breadcrumb__sep">›</span>
+      <a routerLink="/culinaria" class="breadcrumb__item">Culinária</a>
+      <span class="breadcrumb__sep">›</span>
+      <span class="breadcrumb__item breadcrumb__item--active">{{ category()?.name ?? categorySlug }}</span>
+    </nav>
+
+    <h1 class="categoryPage__title">{{ category()?.name ?? 'Categoria' }}</h1>
+    @if (category()?.description) {
+      <p class="categoryPage__description">{{ category()!.description }}</p>
+    }
+  </header>
+
+  @if (loading()) {
+    <div class="categoryPage__loading">
+      <app-icon name="loader-circle" size="20" [spin]="true" aria-hidden="true" />
+      <span>Carregando receitas...</span>
+    </div>
+  } @else if (recipes().length === 0) {
+    <div class="studyGrid__empty">
+      <app-icon name="inbox" size="30" aria-hidden="true" />
+      <p>Nenhuma receita nessa categoria ainda.</p>
+      <button pButton type="button" class="btn-primary" (click)="openCreateModal()">
+        <app-icon name="plus" size="16" aria-hidden="true" />
+        <span>Adicionar receita</span>
+      </button>
+    </div>
+  } @else {
+    <div class="recipesGrid">
+      @for (recipe of recipes(); track recipe.id) {
+        <article class="recipeCard">
+          @if (recipe.imageUrl) {
+            <div class="recipeCard__image">
+              <img [src]="recipe.imageUrl" [alt]="recipe.name" loading="lazy" />
+            </div>
+          }
+          <div class="recipeCard__content">
+            <div class="recipeCard__meta">
+              <span class="recipeCard__difficulty">{{ recipe.difficulty }}</span>
+              <span class="recipeCard__status" [ngClass]="getStatusClass(recipe.status)">
+                {{ getStatusLabel(recipe.status) }}
+              </span>
+            </div>
+            <h2 class="recipeCard__title">{{ recipe.name }}</h2>
+            <p class="recipeCard__description">{{ recipe.description }}</p>
+            <div class="recipeCard__info">
+              @if (recipe.prepTimeMinutes) {
+                <span><app-icon name="clock" size="14" aria-hidden="true" /> {{ recipe.prepTimeMinutes }}min prep</span>
+              }
+              @if (recipe.servingsStr) {
+                <span><app-icon name="users" size="14" aria-hidden="true" /> {{ recipe.servingsStr }}</span>
+              }
+            </div>
+          </div>
+          <div class="recipeCard__footer">
+            <p-button
+              label="Ver receita"
+              styleClass="btn-accent-outline"
+              [routerLink]="['/culinaria', categorySlug, recipe.slug]"
+            />
+            <div class="recipeCard__actions">
+              <button pButton type="button" class="p-button-text p-button-sm" (click)="openEditModal(recipe)" pTooltip="Editar" tooltipPosition="top" [attr.aria-label]="'Editar receita ' + recipe.name"><app-icon name="pencil" size="15" aria-hidden="true" /></button>
+              <button pButton type="button" class="p-button-text p-button-sm p-button-danger" (click)="openDeleteModal(recipe)" pTooltip="Excluir" tooltipPosition="top" [attr.aria-label]="'Excluir receita ' + recipe.name"><app-icon name="trash-2" size="15" aria-hidden="true" /></button>
+            </div>
+          </div>
+        </article>
+      }
+    </div>
+  }
+</div>
+
+<!-- Modal: Cadastrar / Editar Receita -->
+<p-dialog
+  [(visible)]="modalVisible"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '620px' }"
+  [header]="editingRecipe ? 'Editar Receita' : 'Nova Receita'"
+  styleClass="studyModal"
+  (onHide)="cancelModal()"
+>
+  <form class="form" (ngSubmit)="saveRecipe()">
+    @if (errorMessage) {
+      <div class="form__error" role="alert">{{ errorMessage }}</div>
+    }
+    <label class="field">
+      <span>Nome *</span>
+      <input pInputText name="name" [(ngModel)]="form.name" placeholder="Ex: Lasanha de Frango" />
+    </label>
+    <label class="field">
+      <span>Slug *</span>
+      <input pInputText name="slug" [(ngModel)]="form.slug" placeholder="Ex: lasanha-de-frango" [disabled]="!!editingRecipe" />
+    </label>
+    <label class="field">
+      <span>Descrição</span>
+      <input pInputText name="description" [(ngModel)]="form.description" placeholder="Breve descrição da receita" />
+    </label>
+    <div class="form__row">
+      <label class="field">
+        <span>Dificuldade</span>
+        <p-select
+          name="difficulty"
+          [(ngModel)]="form.difficulty"
+          [options]="difficultyOptions"
+          optionLabel="label"
+          optionValue="value"
+          [style]="{ width: '100%' }"
+        />
+      </label>
+      <label class="field">
+        <span>Status</span>
+        <p-select
+          name="status"
+          [(ngModel)]="form.status"
+          [options]="statusOptions"
+          optionLabel="label"
+          optionValue="value"
+          [style]="{ width: '100%' }"
+        />
+      </label>
+    </div>
+    <div class="form__row">
+      <label class="field">
+        <span>Tempo de preparo (min)</span>
+        <input pInputText type="number" name="prepTimeMinutes" [(ngModel)]="form.prepTimeMinutes" />
+      </label>
+      <label class="field">
+        <span>Tempo de cozimento (min)</span>
+        <input pInputText type="number" name="cookTimeMinutes" [(ngModel)]="form.cookTimeMinutes" />
+      </label>
+    </div>
+    <label class="field">
+      <span>Porções</span>
+      <input pInputText name="servingsStr" [(ngModel)]="form.servingsStr" placeholder="Ex: 4 pessoas" />
+    </label>
+    <label class="field">
+      <span>Tags (separadas por vírgula)</span>
+      <input pInputText name="tagsText" [(ngModel)]="tagsText" placeholder="Ex: rápida, fácil, sem glúten" />
+    </label>
+    <label class="field">
+      <span>URL da imagem</span>
+      <input pInputText name="imageUrl" [(ngModel)]="form.imageUrl" placeholder="https://..." />
+    </label>
+    <label class="field">
+      <span>URL do YouTube</span>
+      <input pInputText name="youtubeUrl" [(ngModel)]="form.youtubeUrl" placeholder="https://youtube.com/..." />
+    </label>
+    <label class="field">
+      <span>Ingredientes (um por linha)</span>
+      <textarea pTextarea name="ingredientsText" [(ngModel)]="ingredientsText" rows="5" placeholder="2 xícaras de farinha&#10;1 ovo&#10;..."></textarea>
+    </label>
+    <label class="field">
+      <span>Modo de preparo (um passo por linha)</span>
+      <textarea pTextarea name="preparationText" [(ngModel)]="preparationText" rows="5" placeholder="Misture os ingredientes&#10;Leve ao forno..."></textarea>
+    </label>
+    <footer class="formActions">
+      <button pButton type="button" class="btn-cancel" (click)="cancelModal()">
+        <span>Cancelar</span>
+      </button>
+      <button pButton type="submit" [disabled]="saving()" class="btn-primary">
+        <app-icon name="check" size="16" aria-hidden="true" />
+        <span>{{ editingRecipe ? 'Salvar alterações' : 'Criar receita' }}</span>
+      </button>
+    </footer>
+  </form>
+</p-dialog>
+
+<!-- Modal: Confirmar exclusão -->
+<p-dialog
+  [(visible)]="deleteModalVisible"
+  [modal]="true"
+  [closable]="false"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '440px' }"
+  header="Confirmar exclusão"
+  styleClass="studyModal"
+>
+  <div class="delete-confirm">
+    <span class="delete-confirm__icon" aria-hidden="true">
+      <app-icon name="triangle-alert" size="28" />
+    </span>
+    <p class="delete-confirm__text">
+      Tem certeza que deseja excluir <strong>{{ deleteTargetName }}</strong>?
+      <br /><span class="delete-confirm__hint">Esta ação não pode ser desfeita.</span>
+    </p>
+  </div>
+  <footer class="formActions">
+    <button pButton type="button" class="btn-cancel" (click)="cancelDelete()">
+      <span>Cancelar</span>
+    </button>
+    <button pButton type="button" severity="danger" (click)="confirmDelete()">
+      <app-icon name="trash-2" size="16" aria-hidden="true" />
+      <span>Confirmar exclusão</span>
+    </button>
+  </footer>
+</p-dialog>

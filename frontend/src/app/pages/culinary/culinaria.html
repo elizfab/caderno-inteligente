@@ -1,0 +1,172 @@
+<div class="culinariaPage" role="region" aria-label="Culinária">
+  <header class="culinariaPage__header">
+    <div class="culinariaPage__topRow">
+      <app-back-button></app-back-button>
+    </div>
+    <h1 class="culinariaPage__title">Culinária</h1>
+    <p class="culinariaPage__description">
+      Organize suas receitas por categoria. Cadastre, edite e explore o seu acervo culinário.
+    </p>
+  </header>
+
+  @if (loading()) {
+    <div class="culinariaPage__loading" role="status" aria-live="polite">
+      <app-icon name="loader-circle" size="20" [spin]="true" aria-hidden="true" />
+      <span>Carregando categorias...</span>
+    </div>
+  } @else if (categories().length === 0) {
+    <div class="studyGrid__empty">
+      <app-icon name="inbox" size="30" aria-hidden="true" />
+      <p>Nenhuma categoria cadastrada ainda.</p>
+      <button pButton type="button" class="btn-primary" (click)="openCreateModal()">
+        <app-icon name="plus" size="16" aria-hidden="true" />
+        <span>Criar primeira categoria</span>
+      </button>
+    </div>
+  } @else {
+    <ul class="culinariaGrid" role="list" aria-label="Categorias culinárias">
+      @for (cat of categories(); track cat.id) {
+        <li role="listitem" class="culinariaGrid__item">
+          <article class="culinaryCard" [style.background]="cat.color || '#201F25'">
+            <div class="culinaryCard__header">
+              <app-icon [name]="cat.icon" size="22" aria-hidden="true" />
+              @if (cat.tag) {
+                <span class="culinaryCard__tag">{{ cat.tag }}</span>
+              }
+            </div>
+            <div class="culinaryCard__body">
+              <h2>{{ cat.name }}</h2>
+              <p>{{ cat.description }}</p>
+            </div>
+            <div class="culinaryCard__footer">
+              <p-button
+                label="Abrir categoria"
+                styleClass="btn-accent-outline"
+                [routerLink]="['/culinaria', cat.slug]"
+              />
+              <div class="culinaryCard__actions">
+                <button
+                  pButton
+                  type="button"
+                  class="p-button-text p-button-sm"
+                  (click)="openEditModal(cat)"
+                  pTooltip="Editar"
+                  tooltipPosition="top"
+                  [attr.aria-label]="'Editar categoria ' + cat.name"
+                >
+                  <app-icon name="pencil" size="15" aria-hidden="true" />
+                </button>
+                <button
+                  pButton
+                  type="button"
+                  class="p-button-text p-button-sm p-button-danger"
+                  (click)="openDeleteModal(cat)"
+                  pTooltip="Excluir"
+                  tooltipPosition="top"
+                  [attr.aria-label]="'Excluir categoria ' + cat.name"
+                >
+                  <app-icon name="trash-2" size="15" aria-hidden="true" />
+                </button>
+              </div>
+            </div>
+          </article>
+        </li>
+      }
+    </ul>
+  }
+</div>
+
+<!-- Modal: Cadastrar / Editar Categoria -->
+<p-dialog
+  [(visible)]="modalVisible"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '520px' }"
+  [header]="editingCategory ? 'Editar Categoria' : 'Nova Categoria Culinária'"
+  styleClass="studyModal"
+  (onHide)="cancelModal()"
+>
+  <form class="form" (ngSubmit)="saveCategory()" aria-label="Formulário de categoria culinária">
+    @if (errorMessage) {
+      <div class="form__error" role="alert">{{ errorMessage }}</div>
+    }
+    <label class="field">
+      <span>Nome *</span>
+      <input pInputText name="name" [(ngModel)]="form.name" placeholder="Ex: Massas" required />
+    </label>
+    <label class="field">
+      <span>Slug *</span>
+      <input pInputText name="slug" [(ngModel)]="form.slug" placeholder="Ex: massas" [disabled]="!!editingCategory" required />
+    </label>
+    <label class="field">
+      <span>Descrição</span>
+      <input pInputText name="description" [(ngModel)]="form.description" placeholder="Breve descrição da categoria" />
+    </label>
+    <div class="form__row">
+      <label class="field">
+        <span>Tag</span>
+        <input pInputText name="tag" [(ngModel)]="form.tag" placeholder="Ex: Italiana" />
+      </label>
+      <label class="field">
+        <span>Ícone (Lucide)</span>
+        <input pInputText name="icon" [(ngModel)]="form.icon" placeholder="Ex: utensils" />
+      </label>
+    </div>
+    <div class="form__row">
+      <label class="field">
+        <span>Cor do card</span>
+        <input pInputText name="color" [(ngModel)]="form.color" placeholder="#201F25" />
+      </label>
+      <label class="field">
+        <span>Ordem</span>
+        <input pInputText type="number" name="order" [(ngModel)]="form.order" />
+      </label>
+    </div>
+    <label class="field">
+      <span>URL da imagem</span>
+      <input pInputText name="imageUrl" [(ngModel)]="form.imageUrl" placeholder="/assets/..." />
+    </label>
+    <footer class="formActions">
+      <button pButton type="button" class="btn-cancel" (click)="cancelModal()">
+        <span>Cancelar</span>
+      </button>
+      <button pButton type="submit" [disabled]="saving()" class="btn-primary">
+        <app-icon name="check" size="16" aria-hidden="true" />
+        <span>{{ editingCategory ? 'Salvar alterações' : 'Criar categoria' }}</span>
+      </button>
+    </footer>
+  </form>
+</p-dialog>
+
+<!-- Modal: Confirmar exclusão -->
+<p-dialog
+  [(visible)]="deleteModalVisible"
+  [modal]="true"
+  [closable]="false"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '440px' }"
+  header="Confirmar exclusão"
+  styleClass="studyModal"
+>
+  <div class="delete-confirm">
+    <span class="delete-confirm__icon" aria-hidden="true">
+      <app-icon name="triangle-alert" size="28" />
+    </span>
+    <p class="delete-confirm__text">
+      Tem certeza que deseja excluir <strong>{{ deleteTargetName }}</strong>?
+      <br /><span class="delete-confirm__hint">Esta ação não pode ser desfeita.</span>
+    </p>
+  </div>
+  <footer class="formActions">
+    <button pButton type="button" class="btn-cancel" (click)="cancelDelete()">
+      <span>Cancelar</span>
+    </button>
+    <button pButton type="button" severity="danger" (click)="confirmDelete()">
+      <app-icon name="trash-2" size="16" aria-hidden="true" />
+      <span>Confirmar exclusão</span>
+    </button>
+  </footer>
+</p-dialog>

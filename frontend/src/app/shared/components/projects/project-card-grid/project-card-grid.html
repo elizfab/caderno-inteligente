@@ -1,0 +1,135 @@
+<section class="projectPage" role="region" [attr.aria-label]="pageTitle">
+  <header class="projectPage__header">
+    <div class="projectPage__topRow">
+      <app-back-button></app-back-button>
+      <ng-content select="[slot='header-actions']"></ng-content>
+    </div>
+    <div class="projectPage__headerBottom">
+      <h1 class="projectPage__title">{{ pageTitle }}</h1>
+      <p class="projectPage__description">{{ pageDescription }}</p>
+    </div>
+  </header>
+
+  <ul class="projectGrid" role="list" aria-label="Lista de projetos">
+    @for (item of items; track item.id) {
+      <li role="listitem" class="projectGrid__item">
+        <article class="projectCard" [style.--card-accent]="getAccentColor(item)">
+          <div class="projectCard__banner" [style.background]="item.bannerColor">
+            @if (item.imageUrl) {
+              <img
+                class="projectCard__image"
+                [src]="item.imageUrl"
+                [alt]="item.imageAlt ?? item.title"
+                (error)="onImageError($event)"
+              />
+            }
+            <span class="projectCard__icon" aria-hidden="true">
+              @if (item.iconUrl) {
+                <img
+                  #projIconImg
+                  class="projectCard__iconImg"
+                  [src]="item.iconUrl"
+                  [alt]="item.title"
+                  (error)="projIconImg.style.display='none'"
+                />
+              } @else {
+                <app-icon [name]="item.iconClass" size="22" />
+              }
+            </span>
+
+            @if (item.apiId) {
+              <button
+                class="projectCard__deleteBtn"
+                type="button"
+                pTooltip="Excluir projeto"
+                tooltipPosition="top"
+                (click)="requestDelete(item, $event)"
+                aria-label="Excluir {{ item.title }}"
+              >
+                <app-icon name="trash-2" size="15" aria-hidden="true" />
+              </button>
+              <button
+                class="projectCard__editBtn"
+                type="button"
+                pTooltip="Editar projeto"
+                tooltipPosition="top"
+                (click)="requestEdit(item, $event)"
+                aria-label="Editar {{ item.title }}"
+              >
+                <app-icon name="pencil" size="15" aria-hidden="true" />
+              </button>
+            }
+          </div>
+
+          <div class="projectCard__content">
+            <h2 class="projectCard__title">{{ item.title }}</h2>
+
+            <p class="projectCard__description">{{ item.description }}</p>
+
+            <ul class="projectCard__tags" role="list" aria-label="Tags do projeto">
+              @for (tag of item.tags; track tag) {
+                <li role="listitem" class="projectCard__tag">{{ tag }}</li>
+              }
+            </ul>
+
+            <div class="projectCard__actions">
+              @if (item.repoUrl || item.deployUrl) {
+                <div class="projectCard__actionsTop">
+                  @if (item.repoUrl) {
+                    <button
+                      pButton
+                      type="button"
+                      class="projectCard__btn projectCard__btn--secondary"
+                      pTooltip="Abrir repositório no GitHub"
+                      tooltipPosition="bottom"
+                      (click)="openUrl(item.repoUrl)"
+                      [attr.aria-label]="'Abrir repositório de ' + item.title + ' no GitHub'"
+                    >
+                      <app-icon name="folder-git-2" size="15" aria-hidden="true" />
+                      <span>GitHub</span>
+                    </button>
+                  }
+                  @if (item.deployUrl) {
+                    <button
+                      pButton
+                      type="button"
+                      class="projectCard__btn projectCard__btn--secondary"
+                      pTooltip="Abrir projeto publicado"
+                      tooltipPosition="bottom"
+                      (click)="openUrl(item.deployUrl)"
+                      [attr.aria-label]="'Abrir deploy de ' + item.title"
+                    >
+                      <app-icon name="external-link" size="15" aria-hidden="true" />
+                      <span>Deploy</span>
+                    </button>
+                  }
+                </div>
+              }
+              @if (item.detailRoute) {
+                <a
+                  pButton
+                  [routerLink]="item.detailRoute"
+                  class="projectCard__btn projectCard__btn--secondary projectCard__btn--full"
+                  pTooltip="Ver detalhes do projeto"
+                  tooltipPosition="bottom"
+                  [attr.aria-label]="'Ver detalhes de ' + item.title"
+                >
+                  <span>Ver Detalhes</span>
+                  <app-icon name="arrow-right" size="15" aria-hidden="true" />
+                </a>
+              }
+            </div>
+          </div>
+        </article>
+      </li>
+    } @empty {
+      <li class="projectGrid__empty" role="listitem">
+        <span class="projectGrid__emptyIcon" aria-hidden="true">
+          <app-icon name="inbox" size="34" />
+        </span>
+        <p class="projectGrid__emptyText">Nenhum projeto cadastrado ainda.</p>
+        <p class="projectGrid__emptyHint">Use o botão no topo da página para adicionar o primeiro.</p>
+      </li>
+    }
+  </ul>
+</section>

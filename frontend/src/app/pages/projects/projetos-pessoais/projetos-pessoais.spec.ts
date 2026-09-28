@@ -1,0 +1,166 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideAppIcons } from '../../../shared/icons/icon.registry';
+import { RouterModule } from '@angular/router';
+import { of, throwError } from 'rxjs';
+import { ProjetosPessoais } from './projetos-pessoais';
+import { Project } from '../../../shared/types/project.interface';
+import { ProjectService } from '../../../core/services/project/project.service';
+
+const mockProjects: Project[] = [
+  {
+    id: 'proj-1',
+    name: 'StudyPanel',
+    type: 'pessoal',
+    description: 'Painel de estudos pessoal',
+    tags: ['angular', 'node'],
+    repoUrl: 'https://github.com/user/studypanel',
+    deployUrl: 'https://studypanel.vercel.app',
+    slug: 'studypanel',
+    bannerColor: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+    active: true,
+    order: 1,
+  },
+  {
+    id: 'proj-2',
+    name: 'Blog Pessoal',
+    type: 'pessoal',
+    description: 'Blog de artigos técnicos',
+    tags: ['next', 'typescript'],
+    slug: 'blog',
+    bannerColor: 'linear-gradient(135deg, #059669, #10b981)',
+    active: true,
+    order: 2,
+  },
+];
+
+describe('ProjetosPessoais', () => {
+  let component: ProjetosPessoais;
+  let fixture: ComponentFixture<ProjetosPessoais>;
+  let mockProjectService: { list: jest.Mock; create: jest.Mock; update: jest.Mock; delete: jest.Mock };
+
+  beforeEach(async () => {
+    mockProjectService = {
+      list: jest.fn().mockReturnValue(of(mockProjects)),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    };
+
+    await TestBed.configureTestingModule({
+      imports: [ProjetosPessoais, RouterModule.forRoot([])],
+      providers: [provideAppIcons(), provideHttpClient(), provideHttpClientTesting(), 
+        { provide: ProjectService, useValue: mockProjectService },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(ProjetosPessoais);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+
+  it('should call projectService.list("pessoal") on init', () => {
+    expect(mockProjectService.list).toHaveBeenCalledWith('pessoal');
+  });
+
+  it('should populate items() with mapped data when service returns projects', () => {
+    expect(component.items().length).toBe(2);
+    expect(component.items()[0].title).toBe('StudyPanel');
+    expect(component.items()[1].title).toBe('Blog Pessoal');
+  });
+
+  it('should map bannerColor from API to card item', () => {
+    expect(component.items()[0].bannerColor).toBe('linear-gradient(135deg, #4f46e5, #7c3aed)');
+    expect(component.items()[1].bannerColor).toBe('linear-gradient(135deg, #059669, #10b981)');
+  });
+
+  it('should set apiId from project.id on mapped cards', () => {
+    expect(component.items()[0].apiId).toBe('proj-1');
+    expect(component.items()[1].apiId).toBe('proj-2');
+  });
+
+  it('should set items() to empty when service returns empty array', () => {
+    mockProjectService.list.mockReturnValue(of([]));
+    component.ngOnInit();
+    expect(component.items().length).toBe(0);
+  });
+
+  it('should set items() to empty when service errors', () => {
+    mockProjectService.list.mockReturnValue(throwError(() => new Error('fail')));
+    component.ngOnInit();
+    expect(component.items().length).toBe(0);
+  });
+
+  it('openCreateModal() should set modalVisible to true', () => {
+    component.openCreateModal();
+    expect(component.modalVisible).toBe(true);
+  });
+
+  it('openCreateModal() should reset form fields and clear editingProject', () => {
+    component.form.name = 'Old Name';
+    component.openCreateModal();
+    expect(component.form.name).toBe('');
+    expect(component.form.type).toBe('pessoal');
+    expect(component.editingProject).toBeNull();
+  });
+
+  it('openCreateModal() should clear errorMessage', () => {
+    component.errorMessage = 'previous error';
+    component.openCreateModal();
+    expect(component.errorMessage).toBe('');
+  });
+
+  it('cancelModal() should set modalVisible to false', () => {
+    component.modalVisible = true;
+    component.cancelModal();
+    expect(component.modalVisible).toBe(false);
+  });
+
+  it('cancelModal() should clear errorMessage', () => {
+    component.errorMessage = 'some error';
+    component.cancelModal();
+    expect(component.errorMessage).toBe('');
+  });
+
+  it('saveProject() with empty name should set errorMessage and not call service', () => {
+    component.form.name = '';
+    component.saveProject();
+    expect(component.errorMessage).toBeTruthy();
+    expect(mockProjectService.create).not.toHaveBeenCalled();
+  });
+
+  it('saveProject() with valid name should call projectService.create()', () => {
+    const created: Project = { ...mockProjects[0], id: 'proj-new' };
+    mockProjectService.create.mockReturnValue(of(created));
+    mockProjectService.list.mockReturnValue(of(mockProjects));
+
+    component.form.name = 'Novo Projeto';
+    component.editingProject = null;
+    component.saveProject();
+
+    expect(mockProjectService.create).toHaveBeenCalled();
+    expect(component.modalVisible).toBe(false);
+  });
+
+  it('saveProject() with valid form should reload the projects list', () => {
+    const created: Project = { ...mockProjects[0], id: 'proj-new' };
+    mockProjectService.create.mockReturnValue(of(created));
+    mockProjectService.list.mockReturnValue(of(mockProjects));
+
+    component.form.name = 'Novo Projeto';
+    component.saveProject();
+
+    expect(mockProjectService.list).toHaveBeenCalledTimes(2);
+  });
+
+  it('should render page title in h1', () => {
+    const h1: HTMLElement = fixture.nativeElement.querySelector('h1');
+    expect(h1).toBeTruthy();
+    expect(h1.textContent).toContain('Projetos Pessoais');
+  });
+});

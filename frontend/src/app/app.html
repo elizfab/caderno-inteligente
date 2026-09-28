@@ -1,1 +1,33 @@
-<h1>Hello World</h1>
+@if (isAuthPage()) {
+  <!-- Páginas de autenticação (login/logout) usam layout próprio, sem shell -->
+  <router-outlet></router-outlet>
+} @else {
+  <div
+    class="app-container"
+    [class.sidebar-expanded]="sidebarExpanded()"
+    [class.sidebar-collapsed]="!sidebarExpanded()"
+  >
+    <div
+      class="app-backdrop"
+      [class.app-backdrop--visible]="sidebarExpanded()"
+      (click)="toggleSidebar()"
+      aria-hidden="true"
+    ></div>
+
+    <app-sidebar
+      [expanded]="sidebarExpanded()"
+      (toggleExpanded)="toggleSidebar()"
+    ></app-sidebar>
+
+    <div class="app-main">
+      <app-header></app-header>
+
+      <main class="app-content" role="main" id="conteudo-principal">
+        <app-breadcrumbs class="app-breadcrumbs" />
+        <router-outlet></router-outlet>
+      </main>
+
+      <app-footer></app-footer>
+    </div>
+  </div>
+}

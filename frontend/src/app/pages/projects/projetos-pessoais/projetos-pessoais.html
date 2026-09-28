@@ -1,0 +1,105 @@
+<div class="page-container">
+  <app-project-card-grid
+    [pageTitle]="pageTitle"
+    [pageDescription]="pageDescription"
+    [items]="items()"
+    (deleteRequest)="onDeleteRequest($event)"
+    (editRequest)="onEditRequest($event)"
+  />
+</div>
+
+<!-- Modal: Cadastrar / Editar -->
+<p-dialog
+  [(visible)]="modalVisible"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '540px' }"
+  [header]="editingProject ? 'Editar Projeto Pessoal' : 'Cadastrar Projeto Pessoal'"
+  styleClass="studyModal"
+  (onHide)="cancelModal()"
+>
+  <form class="form" (ngSubmit)="saveProject()" aria-label="Formulário de projeto pessoal">
+    @if (errorMessage) {
+      <div class="form__error" role="alert">{{ errorMessage }}</div>
+    }
+    <label class="field">
+      <span>Nome *</span>
+      <input pInputText name="name" [(ngModel)]="form.name" placeholder="Ex: Comanda Flow" required />
+    </label>
+    <label class="field">
+      <span>Slug</span>
+      <input pInputText name="slug" [(ngModel)]="form.slug" placeholder="Ex: comanda-flow" />
+    </label>
+    <label class="field">
+      <span>Descrição</span>
+      <input pInputText name="description" [(ngModel)]="form.description" placeholder="Descrição curta do projeto" />
+    </label>
+    <label class="field">
+      <span>Tags (separadas por vírgula)</span>
+      <input pInputText name="tagsInput" [(ngModel)]="tagsInput" placeholder="Angular, TypeScript, ..." />
+    </label>
+    <div class="form__row">
+      <label class="field">
+        <span>URL do Repositório</span>
+        <input pInputText name="repoUrl" [(ngModel)]="form.repoUrl" placeholder="https://github.com/..." />
+      </label>
+      <label class="field">
+        <span>URL do Deploy</span>
+        <input pInputText name="deployUrl" [(ngModel)]="form.deployUrl" placeholder="https://..." />
+      </label>
+    </div>
+    <div class="form__row">
+      <label class="field">
+        <span>Cor do card</span>
+        <input pInputText name="bannerColor" [(ngModel)]="form.bannerColor" placeholder="linear-gradient(...)" />
+      </label>
+      <label class="field">
+        <span>URL da imagem</span>
+        <input pInputText name="imageUrl" [(ngModel)]="form.imageUrl" placeholder="/assets/images/..." />
+      </label>
+    </div>
+    <footer class="formActions">
+      <button pButton type="button" class="btn-cancel" (click)="cancelModal()">
+        <span>Cancelar</span>
+      </button>
+      <button pButton type="submit" [disabled]="saving()" class="btn-primary">
+        <app-icon name="check" size="16" aria-hidden="true" />
+        <span>{{ editingProject ? 'Salvar alterações' : 'Cadastrar' }}</span>
+      </button>
+    </footer>
+  </form>
+</p-dialog>
+
+<!-- Modal: Confirmar exclusão -->
+<p-dialog
+  [(visible)]="deleteModalVisible"
+  [modal]="true"
+  [closable]="false"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '440px' }"
+  header="Confirmar exclusão"
+  styleClass="studyModal"
+>
+  <div class="delete-confirm">
+    <span class="delete-confirm__icon" aria-hidden="true">
+      <app-icon name="triangle-alert" size="28" />
+    </span>
+    <p class="delete-confirm__text">
+      Tem certeza que deseja excluir <strong>{{ deleteTargetName }}</strong>?
+      <br /><span class="delete-confirm__hint">Esta ação não pode ser desfeita.</span>
+    </p>
+  </div>
+
+  <footer class="formActions">
+    <button pButton type="button" class="btn-cancel" (click)="cancelDelete()">
+      <span>Cancelar</span>
+    </button>
+    <button pButton type="button" severity="danger" (click)="confirmDelete()">
+      <app-icon name="trash-2" size="16" aria-hidden="true" />
+      <span>Confirmar exclusão</span>
+    </button>
+  </footer>
+</p-dialog>

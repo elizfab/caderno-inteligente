@@ -1,0 +1,74 @@
+<main class="login" role="main" aria-labelledby="login-title">
+  <section class="login__card" aria-label="Formulário de login">
+    <header class="login__header">
+      <div class="login__logo" aria-hidden="true">
+        <app-icon name="notebook-pen" size="28" />
+      </div>
+      <h1 id="login-title" class="login__title">Caderno Inteligente</h1>
+      <p class="login__subtitle">Entre para acessar seus estudos, projetos e anotações.</p>
+    </header>
+
+    <form class="login__form" (ngSubmit)="submit()" novalidate>
+      @if (errorMessage()) {
+        <div class="login__error" role="alert">
+          <app-icon name="circle-alert" size="16" aria-hidden="true" />
+          <span>{{ errorMessage() }}</span>
+        </div>
+      }
+
+      <label class="login__field">
+        <span>E-mail</span>
+        <input
+          pInputText
+          type="email"
+          name="email"
+          [(ngModel)]="email"
+          placeholder="voce@exemplo.com"
+          autocomplete="email"
+          required
+          [disabled]="loading()"
+        />
+      </label>
+
+      <label class="login__field">
+        <span>Senha</span>
+        <p-password
+          name="password"
+          [(ngModel)]="password"
+          [feedback]="false"
+          [toggleMask]="true"
+          placeholder="Sua senha"
+          autocomplete="current-password"
+          [disabled]="loading()"
+          [inputStyle]="{ width: '100%' }"
+          styleClass="login__password"
+          required
+        />
+      </label>
+
+      <button
+        pButton
+        type="submit"
+        class="btn-primary login__submit"
+        [disabled]="loading()"
+      >
+        @if (loading()) {
+          <app-icon name="loader-circle" size="16" [spin]="true" aria-hidden="true" />
+          <span>Entrando…</span>
+        } @else {
+          <app-icon name="log-in" size="16" aria-hidden="true" />
+          <span>Entrar</span>
+        }
+      </button>
+
+      <p class="login__signup">
+        Ainda não tem conta?
+        <button type="button" class="login__signupBtn" (click)="registerModal.open()">
+          Criar conta
+        </button>
+      </p>
+    </form>
+  </section>
+
+  <app-register-modal #registerModal />
+</main>

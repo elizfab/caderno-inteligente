@@ -1,0 +1,233 @@
+<section class="admin" role="region" aria-label="Administração de usuários">
+  <header class="admin__head">
+    <h2 class="admin__title">Administração de Usuários</h2>
+    <div class="admin__headActions">
+      <a routerLink="/dashboard" class="btn-accent-outline admin__headBtn">
+        <app-icon name="arrow-left" size="16" aria-hidden="true" />
+        <span>Voltar</span>
+      </a>
+      <button
+        type="button"
+        class="btn-accent-outline admin__headBtn admin__headBtn--icon"
+        (click)="reload()"
+        pTooltip="Atualizar"
+        tooltipPosition="bottom"
+        aria-label="Atualizar lista"
+      >
+        <app-icon name="rotate-cw" size="16" aria-hidden="true" />
+      </button>
+    </div>
+  </header>
+
+  @if (errorMessage()) {
+    <div class="admin__error" role="alert">
+      <app-icon name="circle-alert" size="16" aria-hidden="true" />
+      <span>{{ errorMessage() }}</span>
+    </div>
+  }
+
+  <!-- Cards -->
+  <ul class="admin__cards" role="list">
+    <li class="admin__card">
+      <span class="admin__cardLabel">Total</span>
+      <strong class="admin__cardValue">{{ stats().total }}</strong>
+      <app-icon name="users" size="20" aria-hidden="true" />
+    </li>
+    <li class="admin__card admin__card--active">
+      <span class="admin__cardLabel">Ativos</span>
+      <strong class="admin__cardValue">{{ stats().active }}</strong>
+      <app-icon name="user-check" size="20" aria-hidden="true" />
+    </li>
+    <li class="admin__card admin__card--pending">
+      <span class="admin__cardLabel">Pendentes</span>
+      <strong class="admin__cardValue">{{ stats().pending }}</strong>
+      <app-icon name="clock" size="20" aria-hidden="true" />
+    </li>
+    <li class="admin__card admin__card--blocked">
+      <span class="admin__cardLabel">Bloqueados</span>
+      <strong class="admin__cardValue">{{ stats().blocked }}</strong>
+      <app-icon name="ban" size="20" aria-hidden="true" />
+    </li>
+  </ul>
+
+  <!-- Filtros -->
+  <div class="admin__filters">
+    <div class="admin__search" role="search">
+      <app-icon name="search" size="16" class="admin__searchIcon" aria-hidden="true" />
+      <input
+        pInputText
+        type="search"
+        class="admin__searchInput"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
+        placeholder="Pesquisar por nome ou e-mail"
+        aria-label="Pesquisar usuários"
+      />
+    </div>
+    <p-select
+      [options]="statusOptions"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="statusFilter()"
+      (ngModelChange)="statusFilter.set($event)"
+      styleClass="admin__statusSelect"
+      [attr.aria-label]="'Filtrar por status'"
+    />
+  </div>
+
+  <!-- Tabela -->
+  <div class="tableWrapper">
+    <p-table
+      [value]="filtered()"
+      [loading]="loading()"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      styleClass="admin__table"
+      [tableStyle]="{ 'min-width': '64rem' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 4.5rem; text-align: center;">Avatar</th>
+          <th pSortableColumn="name" style="min-width: 10rem;">Nome <p-sortIcon field="name" /></th>
+          <th pSortableColumn="email" style="min-width: 12rem;">E-mail <p-sortIcon field="email" /></th>
+          <th style="width: 9rem;">Telefone</th>
+          <th pSortableColumn="createdAt" style="width: 8rem;">Cadastro <p-sortIcon field="createdAt" /></th>
+          <th style="width: 11rem;">Último acesso</th>
+          <th pSortableColumn="status" style="width: 8rem;">Status <p-sortIcon field="status" /></th>
+          <th style="width: 9rem;">Tipo</th>
+          <th style="width: 8.5rem; text-align: center;">Ações</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-user>
+        <tr>
+          <td>
+            <span class="admin__avatar" aria-hidden="true">
+              @if (user.avatarUrl) {
+                <img [src]="user.avatarUrl" alt="" />
+              } @else {
+                {{ initials(user.name) }}
+              }
+            </span>
+          </td>
+          <td>{{ user.name }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ user.phone || '—' }}</td>
+          <td>{{ user.createdAt ? (user.createdAt | date: 'dd/MM/yyyy') : '—' }}</td>
+          <td>{{ user.lastLoginAt ? (user.lastLoginAt | date: 'dd/MM/yyyy HH:mm') : '—' }}</td>
+          <td>
+            <p-tag [value]="statusLabel(user.status)" [severity]="statusSeverity(user.status)" />
+          </td>
+          <td>
+            <span class="admin__role" [class.admin__role--admin]="user.role === 'admin'">
+              {{ user.role === 'admin' ? 'Administrador' : 'Usuário' }}
+            </span>
+          </td>
+          <td class="admin__actions" style="text-align: center;">
+            @if (user.status === 'pending' || user.status === 'blocked') {
+              <button
+                pButton
+                type="button"
+                rounded
+                text
+                class="tableAction tableAction--approve"
+                (click)="ask('approve', user)"
+                pTooltip="Aprovar"
+                tooltipPosition="bottom"
+                aria-label="Aprovar usuário"
+              >
+                <app-icon name="user-check" size="16" aria-hidden="true" />
+              </button>
+            }
+            @if (user.status !== 'blocked') {
+              <button
+                pButton
+                type="button"
+                rounded
+                text
+                class="tableAction tableAction--block"
+                [disabled]="user.role === 'admin'"
+                (click)="ask('block', user)"
+                [pTooltip]="user.role === 'admin' ? 'Admin não pode ser bloqueado' : 'Bloquear / Reprovar'"
+                tooltipPosition="bottom"
+                aria-label="Bloquear usuário"
+              >
+                <app-icon name="ban" size="16" aria-hidden="true" />
+              </button>
+            } @else {
+              <button
+                pButton
+                type="button"
+                rounded
+                text
+                class="tableAction tableAction--unblock"
+                (click)="ask('unblock', user)"
+                pTooltip="Desbloquear"
+                tooltipPosition="bottom"
+                aria-label="Desbloquear usuário"
+              >
+                <app-icon name="unlock" size="16" aria-hidden="true" />
+              </button>
+            }
+            <button
+              pButton
+              type="button"
+              rounded
+              text
+              class="tableAction tableAction--delete"
+              [disabled]="user.role === 'admin'"
+              (click)="ask('delete', user)"
+              [pTooltip]="user.role === 'admin' ? 'Admin não pode ser excluído' : 'Excluir'"
+              tooltipPosition="bottom"
+              aria-label="Excluir usuário"
+            >
+              <app-icon name="trash-2" size="16" aria-hidden="true" />
+            </button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9" class="admin__empty">
+            <app-icon name="inbox" size="20" aria-hidden="true" />
+            <span>Nenhum usuário encontrado.</span>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+  <!-- Confirmação -->
+  <p-dialog
+    [visible]="!!pending()"
+    (visibleChange)="!$event && cancel()"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [style]="{ width: '28rem' }"
+    [header]="confirmTitle()"
+    styleClass="studyModal"
+  >
+    <div class="delete-confirm">
+      <app-icon name="triangle-alert" size="22" aria-hidden="true" />
+      <p>{{ confirmMessage() }}</p>
+    </div>
+    <div class="formActions">
+      <button pButton type="button" class="btn-cancel" (click)="cancel()" [disabled]="processing()">
+        <span>Cancelar</span>
+      </button>
+      <button pButton type="button" class="btn-primary" (click)="confirm()" [disabled]="processing()">
+        @if (processing()) {
+          <app-icon name="loader-circle" size="16" [spin]="true" aria-hidden="true" />
+          <span>Processando…</span>
+        } @else {
+          <app-icon name="check" size="16" aria-hidden="true" />
+          <span>Confirmar</span>
+        }
+      </button>
+    </div>
+  </p-dialog>
+
+</section>
+

@@ -1,0 +1,186 @@
+<section class="detailPage" [style.--detail-accent]="accentColor">
+  <header class="detailHeader">
+    <div>
+      <div class="detailHeader__topRow">
+        <!-- <span class="detailHeader__eyebrow">Detalhes do estudo</span> -->
+        <app-back-button></app-back-button>
+      </div>
+      <p class="detailHeader__description">{{ pageDescription }}</p>
+    </div>
+  </header>
+
+  <div class="tableWrapper">
+    <p-table
+      [value]="items()"
+      [loading]="loading()"
+      [paginator]="true"
+      [rows]="5"
+      [rowsPerPageOptions]="[5, 10, 20]"
+      [globalFilterFields]="['courseName', 'status', 'date']"
+      [tableStyle]="{'min-width': '40rem'}"
+    >
+      <ng-template pTemplate="caption">
+        <div class="tableCaption">
+          <span class="tableCaption__title">Cursos e conteúdos cadastrados</span>
+          <span class="tableCaption__hint">
+            Gerencie seus estudos, status, datas e links importantes.
+          </span>
+        </div>
+      </ng-template>
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="courseName">
+            Nome do curso <p-sortIcon field="courseName" />
+          </th>
+          <th pSortableColumn="status" style="width: 10rem;">
+            Status <p-sortIcon field="status" />
+          </th>
+          <th pSortableColumn="date" style="width: 8rem;">
+            Data <p-sortIcon field="date" />
+          </th>
+          <th style="width: 4rem; text-align: center;">Editar</th>
+          <th style="width: 4rem; text-align: center;">Excluir</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-item let-rowIndex="rowIndex">
+        <tr [class.row--odd]="rowIndex % 2 !== 0">
+          <td>
+            <a class="courseLink" [routerLink]="courseDetailRoute(item)">
+              {{ item.courseName }}
+            </a>
+          </td>
+
+          <td>
+            <p-tag
+              [value]="item.status"
+              [severity]="getStatusSeverity(item.status)"
+            />
+          </td>
+
+          <td>{{ item.date }}</td>
+
+          <td style="text-align: center;">
+            <button
+              pButton
+              type="button"
+              class="tableAction tableAction--edit"
+              rounded
+              text
+              (click)="openEditModal(item)"
+              [attr.aria-label]="'Editar ' + item.courseName"
+            >
+              <app-icon name="pencil" size="15" aria-hidden="true" />
+            </button>
+          </td>
+
+          <td style="text-align: center;">
+            <button
+              pButton
+              type="button"
+              class="tableAction tableAction--delete"
+              severity="danger"
+              rounded
+              text
+              (click)="deleteItem(item)"
+              [attr.aria-label]="'Excluir ' + item.courseName"
+            >
+              <app-icon name="trash-2" size="15" aria-hidden="true" />
+            </button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="5" class="emptyState">
+            <span class="emptyState__icon" aria-hidden="true">
+              <app-icon name="inbox" size="30" />
+            </span>
+            <p>Nenhum item cadastrado ainda.<br />Clique em "{{ createButtonLabel }}" para começar.</p>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <p-dialog
+    [(visible)]="modalVisible"
+    [modal]="true"
+    [style]="{ width: '32rem' }"
+    [draggable]="false"
+    [resizable]="false"
+    [header]="editingItem ? 'Editar recurso' : createButtonLabel"
+    styleClass="studyModal"
+  >
+    <form class="form" (ngSubmit)="saveItem()">
+      <label class="field">
+        <span>Nome do curso / recurso</span>
+        <input
+          pInputText
+          type="text"
+          name="courseName"
+          [(ngModel)]="form.courseName"
+          placeholder="Ex: Angular Avançado"
+        />
+      </label>
+
+      <label class="field">
+        <span>Status</span>
+        <select name="status" [(ngModel)]="form.status" class="field__select">
+          <option value="Não iniciado">Não iniciado</option>
+          <option value="Em andamento">Em andamento</option>
+          <option value="Concluído">Concluído</option>
+          <option value="Pausado">Pausado</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Data</span>
+        <input
+          pInputText
+          type="date"
+          name="date"
+          [(ngModel)]="form.date"
+        />
+      </label>
+
+      <label class="field">
+        <span>Link</span>
+        <input
+          pInputText
+          type="url"
+          name="url"
+          [(ngModel)]="form.url"
+          placeholder="https://..."
+        />
+      </label>
+
+      <footer class="formActions">
+        <button
+          pButton
+          type="button"
+          class="btn-cancel"
+          (click)="closeModal()"
+        >
+          <span>Cancelar</span>
+        </button>
+
+        <button
+          pButton
+          type="submit"
+          [disabled]="saving()"
+          class="btn-primary"
+        >
+          @if (saving()) {
+            <app-icon name="loader-circle" size="16" [spin]="true" aria-hidden="true" />
+          } @else {
+            <app-icon name="check" size="16" aria-hidden="true" />
+          }
+          <span>{{ editingItem ? 'Atualizar conteúdo' : 'Salvar conteúdo' }}</span>
+        </button>
+      </footer>
+    </form>
+  </p-dialog>
+</section>

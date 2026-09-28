@@ -1,0 +1,296 @@
+<div class="recipeDetail">
+  <!-- Header -->
+  <header class="recipeDetail__header">
+    <div class="recipeDetail__topRow">
+      <app-back-button></app-back-button>
+    </div>
+
+    <nav class="breadcrumb" aria-label="Caminho">
+      <a routerLink="/dashboard" class="breadcrumb__item">Dashboard</a>
+      <span class="breadcrumb__sep">›</span>
+      <a routerLink="/culinaria" class="breadcrumb__item">Culinária</a>
+      <span class="breadcrumb__sep">›</span>
+      <a [routerLink]="['/culinaria', categorySlug]" class="breadcrumb__item">{{ category()?.name ?? categorySlug }}</a>
+      <span class="breadcrumb__sep">›</span>
+      <span class="breadcrumb__item breadcrumb__item--active">{{ recipe()?.name ?? recipeSlug }}</span>
+    </nav>
+  </header>
+
+  @if (loading()) {
+    <div class="recipeDetail__loading">
+      <app-icon name="loader-circle" size="20" [spin]="true" aria-hidden="true" />
+      <span>Carregando receita...</span>
+    </div>
+  } @else if (!recipe()) {
+    <div class="studyGrid__empty">
+      <app-icon name="inbox" size="30" aria-hidden="true" />
+      <p>Receita não encontrada.</p>
+      <p-button label="Voltar para categoria" styleClass="btn-primary" [routerLink]="['/culinaria', categorySlug]" />
+    </div>
+  } @else {
+    <div class="recipeDetail__body">
+      <!-- Hero -->
+      <div class="recipeHero">
+        @if (recipe()!.imageUrl) {
+          <div class="recipeHero__image">
+            <img [src]="recipe()!.imageUrl" [alt]="recipe()!.name" loading="lazy" />
+          </div>
+        }
+        <div class="recipeHero__info">
+          <div class="recipeHero__badges">
+            <span class="badge badge--difficulty">{{ recipe()!.difficulty }}</span>
+            <span class="badge" [ngClass]="getStatusClass(recipe()!.status)">{{ getStatusLabel(recipe()!.status) }}</span>
+            @for (tag of recipe()!.tags; track tag) {
+              <span class="badge badge--tag">{{ tag }}</span>
+            }
+          </div>
+          <h1 class="recipeHero__title">{{ recipe()!.name }}</h1>
+          @if (recipe()!.description) {
+            <p class="recipeHero__description">{{ recipe()!.description }}</p>
+          }
+          <div class="recipeHero__stats">
+            @if (recipe()!.prepTimeMinutes) {
+              <div class="recipeStat">
+                <app-icon name="clock" size="16" aria-hidden="true" />
+                <div>
+                  <span class="recipeStat__label">Preparo</span>
+                  <span class="recipeStat__value">{{ recipe()!.prepTimeMinutes }} min</span>
+                </div>
+              </div>
+            }
+            @if (recipe()!.cookTimeMinutes) {
+              <div class="recipeStat">
+                <app-icon name="flame" size="16" aria-hidden="true" />
+                <div>
+                  <span class="recipeStat__label">Cozimento</span>
+                  <span class="recipeStat__value">{{ recipe()!.cookTimeMinutes }} min</span>
+                </div>
+              </div>
+            }
+            @if (recipe()!.servingsStr) {
+              <div class="recipeStat">
+                <app-icon name="users" size="16" aria-hidden="true" />
+                <div>
+                  <span class="recipeStat__label">Porções</span>
+                  <span class="recipeStat__value">{{ recipe()!.servingsStr }}</span>
+                </div>
+              </div>
+            }
+            @if (recipe()!.personalRating) {
+              <div class="recipeStat">
+                <app-icon name="star" size="16" aria-hidden="true" />
+                <div>
+                  <span class="recipeStat__label">Nota pessoal</span>
+                  <span class="recipeStat__value">{{ recipe()!.personalRating }}/10</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Accordion sections -->
+      <p-accordion [multiple]="true" styleClass="recipeAccordion">
+        @if (recipe()!.ingredients.length > 0) {
+          <p-accordion-panel value="ingredients">
+            <p-accordion-header>
+              <span><app-icon name="list" size="16" aria-hidden="true" /> Ingredientes</span>
+            </p-accordion-header>
+            <p-accordion-content>
+              <ul class="recipeList">
+                @for (item of recipe()!.ingredients; track $index) {
+                  <li>{{ item }}</li>
+                }
+              </ul>
+            </p-accordion-content>
+          </p-accordion-panel>
+        }
+
+        @if (recipe()!.preparationSteps.length > 0) {
+          <p-accordion-panel value="preparation">
+            <p-accordion-header>
+              <span><app-icon name="book" size="16" aria-hidden="true" /> Modo de Preparo</span>
+            </p-accordion-header>
+            <p-accordion-content>
+              <ol class="recipeList recipeList--ordered">
+                @for (step of recipe()!.preparationSteps; track $index) {
+                  <li>{{ step }}</li>
+                }
+              </ol>
+            </p-accordion-content>
+          </p-accordion-panel>
+        }
+
+        @if (recipe()!.tips || recipe()!.utensils || recipe()!.substitutions || recipe()!.storageInstructions || recipe()!.notes) {
+          <p-accordion-panel value="tips">
+            <p-accordion-header>
+              <span><app-icon name="lightbulb" size="16" aria-hidden="true" /> Dicas e Observações</span>
+            </p-accordion-header>
+            <p-accordion-content>
+              <div class="recipeTips">
+                @if (recipe()!.utensils) {
+                  <div class="recipeTips__section">
+                    <h4>Utensílios</h4>
+                    <p>{{ recipe()!.utensils }}</p>
+                  </div>
+                }
+                @if (recipe()!.tips) {
+                  <div class="recipeTips__section">
+                    <h4>Dicas</h4>
+                    <p>{{ recipe()!.tips }}</p>
+                  </div>
+                }
+                @if (recipe()!.substitutions) {
+                  <div class="recipeTips__section">
+                    <h4>Substituições</h4>
+                    <p>{{ recipe()!.substitutions }}</p>
+                  </div>
+                }
+                @if (recipe()!.storageInstructions) {
+                  <div class="recipeTips__section">
+                    <h4>Armazenamento</h4>
+                    <p>{{ recipe()!.storageInstructions }}</p>
+                  </div>
+                }
+                @if (recipe()!.notes) {
+                  <div class="recipeTips__section">
+                    <h4>Notas pessoais</h4>
+                    <p>{{ recipe()!.notes }}</p>
+                  </div>
+                }
+              </div>
+            </p-accordion-content>
+          </p-accordion-panel>
+        }
+
+        @if (recipe()!.youtubeUrl || recipe()!.sourceUrl) {
+          <p-accordion-panel value="links">
+            <p-accordion-header>
+              <span><app-icon name="link" size="16" aria-hidden="true" /> Links Úteis</span>
+            </p-accordion-header>
+            <p-accordion-content>
+              <div class="recipeLinks">
+                @if (recipe()!.youtubeUrl) {
+                  <a [href]="recipe()!.youtubeUrl" target="_blank" rel="noopener noreferrer" class="recipeLinks__source">
+                    <app-icon name="circle-play" size="16" aria-hidden="true" />
+                    Assistir no YouTube
+                  </a>
+                }
+                @if (recipe()!.sourceUrl) {
+                  <a [href]="recipe()!.sourceUrl" target="_blank" rel="noopener noreferrer" class="recipeLinks__source">
+                    <app-icon name="external-link" size="16" aria-hidden="true" />
+                    Ver receita original
+                  </a>
+                }
+              </div>
+            </p-accordion-content>
+          </p-accordion-panel>
+        }
+      </p-accordion>
+    </div>
+  }
+</div>
+
+<!-- Modal: Editar Receita -->
+<p-dialog
+  [(visible)]="editModalVisible"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '620px' }"
+  header="Editar Receita"
+  styleClass="studyModal"
+  (onHide)="cancelEditModal()"
+>
+  <form class="form" (ngSubmit)="saveRecipe()">
+    @if (errorMessage) {
+      <div class="form__error" role="alert">{{ errorMessage }}</div>
+    }
+    <label class="field">
+      <span>Nome *</span>
+      <input pInputText name="edit-name" [(ngModel)]="editForm.name" placeholder="Nome da receita" />
+    </label>
+    <label class="field">
+      <span>Descrição</span>
+      <input pInputText name="edit-description" [(ngModel)]="editForm.description" placeholder="Descrição" />
+    </label>
+    <div class="form__row">
+      <label class="field">
+        <span>Dificuldade</span>
+        <p-select
+          name="edit-difficulty"
+          [(ngModel)]="editForm.difficulty"
+          [options]="difficultyOptions"
+          optionLabel="label"
+          optionValue="value"
+          [style]="{ width: '100%' }"
+        />
+      </label>
+      <label class="field">
+        <span>Status</span>
+        <p-select
+          name="edit-status"
+          [(ngModel)]="editForm.status"
+          [options]="statusOptions"
+          optionLabel="label"
+          optionValue="value"
+          [style]="{ width: '100%' }"
+        />
+      </label>
+    </div>
+    <div class="form__row">
+      <label class="field">
+        <span>Tempo de preparo (min)</span>
+        <input pInputText type="number" name="edit-prepTime" [(ngModel)]="editForm.prepTimeMinutes" />
+      </label>
+      <label class="field">
+        <span>Tempo de cozimento (min)</span>
+        <input pInputText type="number" name="edit-cookTime" [(ngModel)]="editForm.cookTimeMinutes" />
+      </label>
+    </div>
+    <label class="field">
+      <span>Porções</span>
+      <input pInputText name="edit-servings" [(ngModel)]="editForm.servingsStr" placeholder="Ex: 4 pessoas" />
+    </label>
+    <label class="field">
+      <span>Tags (separadas por vírgula)</span>
+      <input pInputText name="edit-tags" [(ngModel)]="tagsText" placeholder="rápida, fácil" />
+    </label>
+    <label class="field">
+      <span>Ingredientes (um por linha)</span>
+      <textarea pTextarea name="edit-ingredients" [(ngModel)]="ingredientsText" rows="5"></textarea>
+    </label>
+    <label class="field">
+      <span>Modo de preparo (um passo por linha)</span>
+      <textarea pTextarea name="edit-preparation" [(ngModel)]="preparationText" rows="5"></textarea>
+    </label>
+    <label class="field">
+      <span>Dicas</span>
+      <textarea pTextarea name="edit-tips" [(ngModel)]="editForm.tips" rows="3"></textarea>
+    </label>
+    <label class="field">
+      <span>Notas pessoais</span>
+      <textarea pTextarea name="edit-notes" [(ngModel)]="editForm.notes" rows="2"></textarea>
+    </label>
+    <div class="form__row">
+      <label class="field">
+        <span>URL do YouTube</span>
+        <input pInputText name="edit-youtube" [(ngModel)]="editForm.youtubeUrl" placeholder="https://youtube.com/..." />
+      </label>
+      <label class="field">
+        <span>Nota pessoal (0-10)</span>
+        <input pInputText type="number" name="edit-rating" [(ngModel)]="editForm.personalRating" min="0" max="10" />
+      </label>
+    </div>
+    <footer class="formActions">
+      <button pButton type="button" class="btn-cancel" (click)="cancelEditModal()">
+        <span>Cancelar</span>
+      </button>
+      <button pButton type="submit" [disabled]="saving()" class="btn-primary">
+        <app-icon name="check" size="16" aria-hidden="true" />
+        <span>Salvar alterações</span>
+      </button>
+    </footer>
+  </form>
+</p-dialog>

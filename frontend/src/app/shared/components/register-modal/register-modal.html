@@ -1,0 +1,128 @@
+<p-dialog
+  [visible]="visible()"
+  (visibleChange)="visible.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '32rem' }"
+  header="Criar conta"
+  styleClass="studyModal"
+>
+  @if (successMessage()) {
+    <div class="register__success" role="status" aria-live="polite">
+      <app-icon name="circle-check" size="20" aria-hidden="true" />
+      <span>{{ successMessage() }}</span>
+    </div>
+    <div class="formActions">
+      <button pButton type="button" class="btn-primary" (click)="close()">
+        <span>Fechar</span>
+      </button>
+    </div>
+  } @else {
+    <form class="register__form" (ngSubmit)="submit()" novalidate>
+      @if (errorMessage()) {
+        <div class="register__error" role="alert">
+          <app-icon name="circle-alert" size="16" aria-hidden="true" />
+          <span>{{ errorMessage() }}</span>
+        </div>
+      }
+
+      <div class="register__avatar">
+        <div class="register__avatarPreview" aria-hidden="true">
+          @if (avatarPreview()) {
+            <img [src]="avatarPreview()" alt="" />
+          } @else {
+            <app-icon name="user" size="28" />
+          }
+        </div>
+        <label class="register__avatarUpload">
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            (change)="onAvatarSelected($event)"
+            hidden
+          />
+          <span class="btn-accent-outline">
+            <app-icon name="upload" size="16" aria-hidden="true" />
+            <span>Escolher avatar</span>
+          </span>
+        </label>
+      </div>
+
+      <label class="register__field">
+        <span>Nome completo *</span>
+        <input pInputText name="name" [(ngModel)]="name" required [disabled]="saving()" />
+      </label>
+
+      <label class="register__field">
+        <span>Telefone *</span>
+        <input
+          pInputText
+          name="phone"
+          [(ngModel)]="phone"
+          (ngModelChange)="onPhoneInput()"
+          placeholder="(11) 99999-9999"
+          inputmode="tel"
+          [disabled]="saving()"
+        />
+      </label>
+
+      <label class="register__field">
+        <span>E-mail *</span>
+        <input
+          pInputText
+          type="email"
+          name="email"
+          [(ngModel)]="email"
+          autocomplete="email"
+          placeholder="voce@exemplo.com"
+          required
+          [disabled]="saving()"
+        />
+      </label>
+
+      <label class="register__field">
+        <span>Senha *</span>
+        <p-password
+          name="password"
+          [(ngModel)]="password"
+          [toggleMask]="true"
+          [feedback]="true"
+          [inputStyle]="{ width: '100%' }"
+          styleClass="register__password"
+          [disabled]="saving()"
+          required
+        />
+      </label>
+
+      <label class="register__field">
+        <span>Confirmar senha *</span>
+        <p-password
+          name="confirmPassword"
+          [(ngModel)]="confirmPassword"
+          [toggleMask]="true"
+          [feedback]="false"
+          [inputStyle]="{ width: '100%' }"
+          styleClass="register__password"
+          [disabled]="saving()"
+          required
+        />
+      </label>
+
+      <div class="formActions">
+        <button pButton type="button" class="btn-cancel" (click)="close()" [disabled]="saving()">
+          <span>Cancelar</span>
+        </button>
+        <button pButton type="submit" class="btn-primary" [disabled]="saving()">
+          @if (saving()) {
+            <app-icon name="loader-circle" size="16" [spin]="true" aria-hidden="true" />
+            <span>Enviando…</span>
+          } @else {
+            <app-icon name="user-plus" size="16" aria-hidden="true" />
+            <span>Cadastrar</span>
+          }
+        </button>
+      </div>
+    </form>
+  }
+</p-dialog>

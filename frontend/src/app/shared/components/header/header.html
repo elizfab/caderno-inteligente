@@ -1,0 +1,91 @@
+<header class="header" role="banner">
+  <div class="container">
+    <div class="header__left">
+      <h1 class="header__title">
+        <span class="header__titleBrand">Caderno Inteligente</span>
+        @if (breadcrumbService.pageTitle(); as page) {
+          <span class="header__titleSep" aria-hidden="true">|</span>
+          <span class="header__titlePage">{{ page }}</span>
+        }
+      </h1>
+    </div>
+
+    <div class="header__right">
+      @if (headerActions.actions().length) {
+        <nav class="header__actions" aria-label="Ações da página">
+          @for (action of headerActions.actions(); track action.id) {
+            <button
+              pButton
+              type="button"
+              class="header__actionBtn"
+              [class.btn-accent-outline]="(action.variant ?? 'accent') === 'accent'"
+              [class.btn-primary]="action.variant === 'primary'"
+              [pTooltip]="action.tooltip ?? action.label"
+              tooltipPosition="bottom"
+              (click)="action.run()"
+            >
+              @if (action.icon) {
+                <app-icon [name]="action.icon" size="16" aria-hidden="true" />
+              }
+              <span class="header__actionLabel">{{ action.label }}</span>
+            </button>
+          }
+        </nav>
+      }
+
+      <button
+        type="button"
+        class="header__iconBtn"
+        (click)="theme.toggle()"
+        [pTooltip]="theme.mode() === 'dark' ? 'Tema claro' : 'Tema escuro'"
+        tooltipPosition="bottom"
+        [attr.aria-label]="theme.mode() === 'dark' ? 'Ativar tema claro' : 'Ativar tema escuro'"
+      >
+        <app-icon [name]="theme.mode() === 'dark' ? 'sun' : 'moon'" size="18" aria-hidden="true" />
+      </button>
+
+      @if (auth.isAdmin()) {
+        <a
+          routerLink="/admin/usuarios"
+          class="header__iconBtn"
+          pTooltip="Administração de usuários"
+          tooltipPosition="bottom"
+          aria-label="Administração de usuários"
+        >
+          <app-icon name="shield" size="18" aria-hidden="true" />
+        </a>
+      }
+
+      <a
+        routerLink="/logout"
+        class="header__iconBtn"
+        pTooltip="Sair"
+        tooltipPosition="bottom"
+        aria-label="Sair"
+      >
+        <app-icon name="log-out" size="18" aria-hidden="true" />
+      </a>
+
+      <div class="header__container-user">
+              @if (auth.currentUser(); as user) {
+        <a
+          routerLink="/perfil"
+          class="header__user"
+          [pTooltip]="user.email"
+          tooltipPosition="bottom"
+          aria-label="Meu perfil"
+        >
+          @if (user.avatarUrl) {
+            <span class="header__userAvatar header__userAvatar--img" aria-hidden="true">
+              <img [src]="user.avatarUrl" alt="" />
+            </span>
+          } @else {
+            <span class="header__userAvatar" aria-hidden="true">{{ userInitials() }}</span>
+          }
+          <span class="header__userName">{{ user.name }}</span>
+        </a>
+      }
+      </div>
+    </div>
+  </div>
+</header>

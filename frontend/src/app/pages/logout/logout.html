@@ -1,0 +1,28 @@
+<main class="logout" role="main" aria-labelledby="logout-title">
+  <section class="logout__card">
+    <div class="logout__icon" aria-hidden="true">
+      @if (done()) {
+        <app-icon name="circle-check" size="30" />
+      } @else {
+        <app-icon name="loader-circle" size="30" [spin]="true" />
+      }
+    </div>
+
+    <h1 id="logout-title" class="logout__title">
+      @if (done()) {
+        Você saiu com segurança
+      } @else {
+        Encerrando sessão…
+      }
+    </h1>
+
+    <p class="logout__text">
+      Sua sessão foi encerrada. Até a próxima!
+    </p>
+
+    <button pButton type="button" class="btn-primary logout__btn" routerLink="/login">
+      <app-icon name="log-in" size="16" aria-hidden="true" />
+      <span>Entrar novamente</span>
+    </button>
+  </section>
+</main>

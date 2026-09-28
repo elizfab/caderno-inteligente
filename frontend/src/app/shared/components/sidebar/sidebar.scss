@@ -1,0 +1,282 @@
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100dvh;
+  z-index: 20;
+  background: var(--color-sidebar-bg-dark);
+  color: var(--color-text-on-dark);
+  display: flex;
+  flex-direction: column;
+  border-top-right-radius: 1.2rem;
+  border-bottom-right-radius: 1.2rem;
+
+  overflow: visible;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.container__logo {
+  height: var(--header-height);
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  position: relative;
+  margin-top: 0.8rem;
+}
+
+.container__logoExpanded {
+  justify-content: flex-start;
+  padding-left: 1rem;
+}
+
+.container__logoCollapsed {
+  justify-content: center;
+  padding-left: 0;
+}
+
+.content__logo {
+  overflow: hidden;
+  display: grid;
+  align-items: center;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    width: 3rem;
+    height: 3rem;
+    object-fit: contain;
+  }
+}
+
+// ─── Toggle button ────────────────────────────────────────────────────────────
+
+.toggleButton {
+  width: 1.6rem;
+  height: 2.4rem;
+  border-top-right-radius: 0.6rem;
+  border-bottom-right-radius: 0.6rem;
+  border: none;
+  background: var(--color-sidebar-bg-dark);
+  color: var(--color-text-on-dark);
+  position: absolute;
+  top: calc((var(--header-height) - 2.4rem) / 2);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  z-index: 21;
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+
+  &:hover {
+    background: #2a2930;
+    // box-shadow: 0 0 0 0.0625rem rgba(255, 255, 255, 0.08);
+  }
+
+  // &:active {
+  //   background: #18171c;
+  // }
+
+  // &:focus-visible {
+  //   outline: 0.125rem solid #f5a623;
+  //   outline-offset: 0.125rem;
+  // }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.toggleButtonExpanded {
+  right: 0.75rem;
+}
+
+.toggleButtonCollapsed {
+  right: -1.25rem;
+}
+
+.iconArrow {
+  font-size: 0.93rem;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.toggleIconExpanded {
+  transform: none;
+}
+
+.toggleIconCollapsed {
+  transform: rotate(180deg);
+}
+
+// ─── Navigation ───────────────────────────────────────────────────────────────
+
+.nav {
+  display: flex;
+  flex-flow: column;
+  gap: 0.25rem;
+  justify-content: flex-start;
+  align-content: flex-start;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin-top: 0.5rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.navExpanded {
+  align-items: stretch;
+}
+
+.navCollapsed {
+  align-items: center;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  height: 2.75rem;
+  border-radius: 0.75rem;
+  color: var(--color-text-on-dark);
+  font-size: 1rem;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  overflow: hidden; // clips label during width animation
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+}
+
+.navItemExpanded {
+  gap: 1rem;
+  padding: 0 0.75rem;
+}
+
+.navItemCollapsed {
+  width: 2.75rem;
+  justify-content: center;
+  padding: 0;
+}
+
+.icon {
+  font-size: var(--icon-size);
+  flex: 0 0 auto; // never shrinks — prevents icon jump
+  color: var(--color-text-on-dark);
+}
+
+.navItemActive {
+  color: var(--color-status-warning);
+
+  .icon {
+    color: var(--color-status-warning);
+  }
+}
+
+.iconActive {
+  color: var(--color-status-warning) !important;
+}
+
+// ─── Label — smooth open/close without DOM toggling ──────────────────────────
+
+.label {
+  font-size: 0.95rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+
+  // Expanded default
+  max-width: 12rem;
+  opacity: 1;
+  transition:
+    max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.2s ease;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+// Collapsed: hide label without removing from DOM
+.navItemCollapsed .label,
+.signOutButtonCollapsed .label {
+  max-width: 0;
+  opacity: 0;
+}
+
+// ─── Footer ───────────────────────────────────────────────────────────────────
+
+.sidebarFooter {
+  flex: 0 0 auto;
+  margin-top: auto;
+  padding: 1rem;
+
+
+}
+
+.sidebarFooterExpanded {
+  width: 100%;
+}
+
+.sidebarFooterCollapsed {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+}
+
+.signOutButton {
+  display: flex;
+  align-items: center;
+  height: 2.75rem;
+  width: 100%;
+  border: none;
+  border-radius: 0.75rem;
+  background: transparent;
+  color: var(--color-text-on-dark);
+  font-family: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  overflow: hidden; // clips label during width animation
+  transition: background-color 0.2s ease, color 0.2s ease;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: var(--color-status-warning);
+
+    .icon {
+      color: var(--color-status-warning);
+    }
+  }
+}
+
+.signOutButtonExpanded {
+  gap: 0.75rem;
+  padding: 0 0.75rem;
+}
+
+.signOutButtonCollapsed {
+  width: 2.75rem;
+  justify-content: center;
+  padding: 0;
+}

@@ -1,0 +1,102 @@
+<div class="page-container">
+  <app-study-card-grid
+    [pageTitle]="pageTitle"
+    [pageDescription]="pageDescription"
+    [items]="items()"
+    (deleteRequest)="onDeleteRequest($event)"
+    (editRequest)="onEditRequest($event)"
+  />
+</div>
+
+<!-- Modal: Cadastrar / Editar -->
+<p-dialog
+  [(visible)]="modalVisible"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '520px' }"
+  [header]="editingTopic ? 'Editar Item da Trilha' : 'Cadastrar tópico da trilha'"
+  styleClass="studyModal"
+  (onHide)="cancelModal()"
+>
+  <form class="form" (ngSubmit)="saveTopic()" aria-label="Formulário de tópico da trilha">
+    @if (errorMessage) {
+      <div class="form__error" role="alert">{{ errorMessage }}</div>
+    }
+    <label class="field">
+      <span>Nome *</span>
+      <input pInputText id="topic-label" name="label" [(ngModel)]="form.label" placeholder="Ex: Node.js" required />
+    </label>
+    <label class="field">
+      <span>Slug *</span>
+      <input pInputText id="topic-slug" name="slug" [(ngModel)]="form.slug" placeholder="Ex: nodejs" [disabled]="!!editingTopic" required />
+    </label>
+    <label class="field">
+      <span>Descrição</span>
+      <input pInputText id="topic-desc" name="description" [(ngModel)]="form.description" placeholder="Descrição curta do tópico" />
+    </label>
+    <label class="field">
+      <span>Tag / Skill</span>
+      <input pInputText id="topic-skill" name="skill" [(ngModel)]="form.skill" placeholder="Ex: Runtime" />
+    </label>
+    <div class="form__row">
+      <label class="field">
+        <span>Cor do card</span>
+        <input pInputText id="topic-color" name="bannerColor" [(ngModel)]="form.bannerColor" placeholder="linear-gradient(...)" />
+      </label>
+      <label class="field">
+        <span>Ícone (Lucide)</span>
+        <input pInputText id="topic-icon" name="iconClass" [(ngModel)]="form.iconClass" placeholder="Ex: code, server, cloud" />
+      </label>
+    </div>
+    <label class="field">
+      <span>URL da imagem</span>
+      <input pInputText id="topic-image" name="imageUrl" [(ngModel)]="form.imageUrl" placeholder="/assets/images/..." />
+    </label>
+    <label class="field">
+      <span>Ordem</span>
+      <input pInputText id="topic-order" type="number" name="order" [(ngModel)]="form.order" />
+    </label>
+    <footer class="formActions">
+      <button pButton type="button" class="btn-cancel" (click)="cancelModal()">
+        <span>Cancelar</span>
+      </button>
+      <button pButton type="submit" [disabled]="saving()" class="btn-primary">
+        <app-icon name="check" size="16" aria-hidden="true" />
+        <span>{{ editingTopic ? 'Salvar alterações' : 'Salvar tópico' }}</span>
+      </button>
+    </footer>
+  </form>
+</p-dialog>
+
+<!-- Modal: Confirmar exclusão -->
+<p-dialog
+  [(visible)]="deleteModalVisible"
+  [modal]="true"
+  [closable]="false"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '440px' }"
+  header="Confirmar exclusão"
+  styleClass="studyModal"
+>
+  <div class="delete-confirm">
+    <span class="delete-confirm__icon" aria-hidden="true">
+      <app-icon name="triangle-alert" size="28" />
+    </span>
+    <p class="delete-confirm__text">
+      Tem certeza que deseja excluir <strong>{{ deleteTargetName }}</strong>?
+      <br /><span class="delete-confirm__hint">Esta ação não pode ser desfeita.</span>
+    </p>
+  </div>
+  <footer class="formActions">
+    <button pButton type="button" class="btn-cancel" (click)="cancelDelete()">
+      <span>Cancelar</span>
+    </button>
+    <button pButton type="button" severity="danger" (click)="confirmDelete()">
+      <app-icon name="trash-2" size="16" aria-hidden="true" />
+      <span>Confirmar exclusão</span>
+    </button>
+  </footer>
+</p-dialog>

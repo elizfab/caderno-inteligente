@@ -1,23 +1,39 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideRouter } from '@angular/router';
+import { of } from 'rxjs';
+import { provideAppIcons } from './shared/icons/icon.registry';
+import { HealthService } from './core/services/health/health.service';
+
 import { App } from './app';
 
+const healthServiceMock = {
+  check: jest.fn(() => of({ status: 'ok', service: 'test' })),
+};
+
 describe('App', () => {
+  let component: App;
+  let fixture: ComponentFixture<App>;
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
+      providers: [
+        provideAppIcons(),
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: HealthService, useValue: healthServiceMock },
+      ],
     }).compileComponents();
-  });
 
-  it('deve criar o app', () => {
-    const fixture = TestBed.createComponent(App);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
-  });
-
-  it('deve exibir Hello World', async () => {
-    const fixture = TestBed.createComponent(App);
+    fixture = TestBed.createComponent(App);
+    component = fixture.componentInstance;
     await fixture.whenStable();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello World');
+  });
+
+  it('should create the app', () => {
+    expect(component).toBeTruthy();
   });
 });

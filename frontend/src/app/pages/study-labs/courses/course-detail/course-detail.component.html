@@ -1,0 +1,747 @@
+<div class="courseDetail">
+
+  @if (loading()) {
+    <div class="courseDetail__state">
+      <app-icon name="loader-circle" [spin]="true" class="courseDetail__stateIcon" aria-hidden="true" />
+      <p>Carregando...</p>
+    </div>
+
+  } @else if (error() || !item()) {
+    <div class="courseDetail__state courseDetail__state--error">
+      <app-icon name="triangle-alert" class="courseDetail__stateIcon" aria-hidden="true" />
+      <p>Curso não encontrado.</p>
+      <a class="btn btn--back" [routerLink]="backRoute">
+        <app-icon name="arrow-left" aria-hidden="true" /> Voltar
+      </a>
+    </div>
+
+  } @else {
+
+    <!-- ─── Header ────────────────────────────────────────────────────────────── -->
+    <header class="courseDetail__header">
+      <div class="courseDetail__titleBlock">
+        <h1 class="courseDetail__title">{{ item()!.courseName }}</h1>
+        <p class="courseDetail__subtitle">
+          <app-icon name="folder-open" aria-hidden="true" />
+          {{ sectionLabel }} <span class="courseDetail__subtitleSep">•</span> {{ topicLabel }}
+        </p>
+      </div>
+
+      <div class="courseDetail__metaRow">
+        @if (item()!.url) {
+          <a class="btn btn--resource" [href]="item()!.url" target="_blank" rel="noopener noreferrer">
+            <app-icon name="external-link" aria-hidden="true" />
+            Acessar recurso
+          </a>
+        }
+        <div class="courseDetail__metaBadges">
+          <p-tag [value]="item()!.status" [severity]="getStatusSeverity(item()!.status)" />
+          @if (overallProgress > 0) {
+            <span class="courseDetail__metaItem">
+              <app-icon name="chart-line" aria-hidden="true" />{{ overallProgress }}%
+            </span>
+          }
+          @if (totalStudySeconds > 0) {
+            <span class="courseDetail__metaItem">
+              <app-icon name="timer" aria-hidden="true" />{{ totalStudyTime }}
+            </span>
+          }
+          @if (item()!.date) {
+            <span class="courseDetail__date">
+              <app-icon name="calendar" aria-hidden="true" />{{ item()!.date }}
+            </span>
+          }
+          <span class="session__timer" title="Duração desta sessão">
+            <app-icon name="clock" aria-hidden="true" />Sessão atual: <strong>{{ elapsedLabel }}</strong>
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ─── Acordeões ─────────────────────────────────────────────────────────── -->
+    <main class="courseDetail__main">
+      <p-accordion [multiple]="true" [value]="['notes']">
+
+        <!-- ① Anotações e Resumos ─────────────────────────────────────────────── -->
+        <p-accordion-panel value="notes">
+          <p-accordion-header>
+            <span class="accordion__label">
+              <app-icon name="book" aria-hidden="true" />
+              Anotações e Resumos
+              @if (notes().length) {
+                <span class="accordion__count">{{ notes().length }}</span>
+              }
+            </span>
+          </p-accordion-header>
+          <p-accordion-content>
+            <div class="accordion__body">
+              <div class="accordion__toolbar">
+                <button pButton type="button"
+                  class="btn btn--add"
+                  [style.background]="accentColor"
+                  [style.border-color]="accentColor"
+                  (click)="openNoteModal()"><app-icon name="plus" size="16" aria-hidden="true" /><span>Nova anotação</span></button>
+              </div>
+
+              <p-table [value]="notes()" [sortMode]="'multiple'"
+                [paginator]="notes().length > 5" [rows]="5"
+                [tableStyle]="{'min-width': '48rem'}">
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th pSortableColumn="date" style="width:7rem">Data <p-sortIcon field="date" /></th>
+                    <th pSortableColumn="type" style="width:7.5rem">Tipo <p-sortIcon field="type" /></th>
+                    <th pSortableColumn="title">Título <p-sortIcon field="title" /></th>
+                    <th>Descrição</th>
+                    <th pSortableColumn="progress" style="width:9rem">Progresso <p-sortIcon field="progress" /></th>
+                    <th pSortableColumn="status" style="width:7.5rem">Status <p-sortIcon field="status" /></th>
+                    <th style="width:3.5rem;text-align:center">Link</th>
+                    <th style="width:6rem;text-align:center">Ações</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-note>
+                  <tr>
+                    <td>{{ note.date }}</td>
+                    <td>
+                      @if (note.type) {
+                        <p-tag [value]="note.type" [severity]="getNoteTypeSeverity(note.type)" />
+                      } @else {
+                        <p-tag value="Anotação" severity="info" />
+                      }
+                    </td>
+                    <td class="notes__title">{{ note.title }}</td>
+                    <td class="notes__desc">{{ note.description }}</td>
+                    <td>
+                      <div class="notes__progress">
+                        <p-progressBar [value]="note.progress" [showValue]="false" class="notes__bar" />
+                        <span class="notes__pct">{{ note.progress }}%</span>
+                      </div>
+                    </td>
+                    <td><p-tag [value]="note.status" [severity]="getNoteStatusSeverity(note.status)" /></td>
+                    <td style="text-align:center">
+                      @if (note.link) {
+                        <a [href]="note.link" target="_blank" rel="noopener noreferrer" class="notes__link">
+                          <app-icon name="external-link" aria-hidden="true" />
+                        </a>
+                      } @else { <span class="notes__noLink">—</span> }
+                    </td>
+                    <td style="text-align:center">
+                      <button pButton type="button" class="tableAction tableAction--edit"
+                        rounded text (click)="openNoteModal(note)"><app-icon name="pencil" size="16" aria-hidden="true" /></button>
+                      <button pButton type="button" severity="danger"
+                        class="tableAction" rounded text (click)="deleteNote(note)"><app-icon name="trash-2" size="16" aria-hidden="true" /></button>
+                    </td>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                  <tr><td colspan="8" class="accordion__empty">
+                    <app-icon name="pencil" aria-hidden="true" />
+                    <p>Nenhuma anotação registrada ainda.<br>
+                    Use este espaço para salvar resumos, dúvidas, pontos fracos e aprendizados importantes deste curso.</p>
+                  </td></tr>
+                </ng-template>
+              </p-table>
+            </div>
+          </p-accordion-content>
+        </p-accordion-panel>
+
+        <!-- ② Progresso e Metas ───────────────────────────────────────────────── -->
+        <p-accordion-panel value="progress">
+          <p-accordion-header>
+            <span class="accordion__label">
+              <app-icon name="chart-line" aria-hidden="true" />
+              Progresso e Metas
+              <span class="accordion__pctBadge">{{ overallProgress }}%</span>
+            </span>
+          </p-accordion-header>
+          <p-accordion-content>
+            <div class="accordion__body">
+              <div class="progress__overview">
+                <div class="progress__bar">
+                  <span class="progress__label">Progresso geral</span>
+                  <p-progressBar [value]="overallProgress" [style]="{'height': '0.75rem'}" />
+                </div>
+                <span class="progress__pct">{{ overallProgress }}%</span>
+              </div>
+              <ul class="milestones">
+                @for (m of milestones(); track m.id) {
+                  <li class="milestone" [class.milestone--done]="m.completed">
+                    <button type="button" class="milestone__check"
+                      [attr.aria-label]="m.completed ? 'Desmarcar' : 'Marcar como concluído'"
+                      (click)="toggleMilestone(m.id)">
+                      <app-icon [name]="m.completed ? 'circle-check' : 'circle'" size="16" aria-hidden="true" />
+                    </button>
+                    <span class="milestone__text">{{ m.title }}</span>
+                  </li>
+                }
+              </ul>
+            </div>
+          </p-accordion-content>
+        </p-accordion-panel>
+
+        <!-- ③ Professor IA ────────────────────────────────────────────────────── -->
+        <p-accordion-panel value="ai-professor">
+          <p-accordion-header>
+            <span class="accordion__label">
+              <app-icon name="sparkles" aria-hidden="true" />
+              Professor IA
+              <span class="accordion__badge accordion__badge--ai">Beta</span>
+            </span>
+          </p-accordion-header>
+          <p-accordion-content>
+            <div class="accordion__body">
+              <div class="aiProfessor">
+                <div class="aiProfessor__intro" [style.background]="accentColor + '12'" [style.border-color]="accentColor + '30'">
+                  <div class="aiProfessor__avatar" [style.background]="accentColor">
+                    <app-icon name="bot" aria-hidden="true" />
+                  </div>
+                  <div class="aiProfessor__info">
+                    <strong class="aiProfessor__name">Professor {{ topicLabel }}</strong>
+                    <span class="aiProfessor__desc">Agente especializado para te auxiliar nos estudos de {{ item()!.courseName }}</span>
+                  </div>
+                </div>
+                <div class="aiProfessor__prompts">
+                  <span class="aiProfessor__promptsLabel">Perguntas rápidas</span>
+                  <div class="aiProfessor__promptGrid">
+                    @for (prompt of [
+                      {icon: 'pi-bolt', label: 'Explique este conteúdo de forma simples e técnica'},
+                      {icon: 'pi-question-circle', label: 'Crie 10 questões no estilo da certificação'},
+                      {icon: 'pi-list', label: 'Monte um resumo para revisão'},
+                      {icon: 'pi-exclamation-circle', label: 'Quais tópicos mais caem na prova?'},
+                      {icon: 'pi-wrench', label: 'Crie um laboratório prático para este tema'},
+                      {icon: 'pi-shield', label: 'Quais são meus pontos fracos neste tópico?'}
+                    ]; track prompt.label) {
+                      <button type="button" class="aiProfessor__promptBtn" disabled title="Em breve">
+                        <app-icon [name]="prompt.icon" size="16" aria-hidden="true" />
+                        <span>{{ prompt.label }}</span>
+                      </button>
+                    }
+                  </div>
+                </div>
+                <div class="aiProfessor__cta">
+                  <button pButton type="button"
+                    class="btn btn--add"
+                    [style.background]="accentColor"
+                    [style.border-color]="accentColor"
+                    disabled><app-icon name="messages-square" size="16" aria-hidden="true" /><span>Perguntar ao Professor IA</span></button>
+                  <span class="aiProfessor__ctaNote">Integração com agentes de IA disponível em breve</span>
+                </div>
+              </div>
+            </div>
+          </p-accordion-content>
+        </p-accordion-panel>
+
+        <!-- ④ Recursos e Referências ──────────────────────────────────────────── -->
+        <p-accordion-panel value="resources">
+          <p-accordion-header>
+            <span class="accordion__label">
+              <app-icon name="link" aria-hidden="true" />
+              Recursos e Referências
+              @if (resources().length) {
+                <span class="accordion__count">{{ resources().length }}</span>
+              }
+            </span>
+          </p-accordion-header>
+          <p-accordion-content>
+            <div class="accordion__body">
+              <div class="accordion__toolbar">
+                <button pButton type="button"
+                  class="btn btn--add"
+                  [style.background]="accentColor"
+                  [style.border-color]="accentColor"
+                  (click)="openResourceModal()"><app-icon name="plus" size="16" aria-hidden="true" /><span>Adicionar recurso</span></button>
+              </div>
+
+              <p-table [value]="resources()" [sortMode]="'multiple'"
+                [paginator]="resources().length > 5" [rows]="5"
+                [tableStyle]="{'min-width': '44rem'}">
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th pSortableColumn="type" style="width:8rem">Tipo <p-sortIcon field="type" /></th>
+                    <th pSortableColumn="title">Nome <p-sortIcon field="title" /></th>
+                    <th pSortableColumn="source" style="width:8rem">Fonte <p-sortIcon field="source" /></th>
+                    <th pSortableColumn="priority" style="width:6.5rem">Prioridade <p-sortIcon field="priority" /></th>
+                    <th pSortableColumn="resourceStatus" style="width:8rem">Status <p-sortIcon field="resourceStatus" /></th>
+                    <th style="width:3.5rem;text-align:center">Link</th>
+                    <th style="width:6rem;text-align:center">Ações</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-res>
+                  <tr>
+                    <td>
+                      <span class="resource__typeChip">
+                        <app-icon [name]="getResourceTypeIcon(res.type)" size="16" aria-hidden="true" />
+                        {{ res.type }}
+                      </span>
+                    </td>
+                    <td>
+                      <div class="resource__nameBlock">
+                        <span class="resource__title">{{ res.title }}</span>
+                        @if (res.description) {
+                          <span class="resource__desc">{{ res.description }}</span>
+                        }
+                      </div>
+                    </td>
+                    <td class="resource__source">{{ res.source || '—' }}</td>
+                    <td>
+                      @if (res.priority) {
+                        <p-tag [value]="res.priority" [severity]="getResourcePrioritySeverity(res.priority)" />
+                      } @else { <span class="notes__noLink">—</span> }
+                    </td>
+                    <td>
+                      @if (res.resourceStatus) {
+                        <p-tag [value]="res.resourceStatus" [severity]="getResourceStatusSeverity(res.resourceStatus)" />
+                      } @else {
+                        <p-tag value="Não iniciado" severity="secondary" />
+                      }
+                    </td>
+                    <td style="text-align:center">
+                      <a [href]="res.url" target="_blank" rel="noopener noreferrer" class="notes__link">
+                        <app-icon name="external-link" aria-hidden="true" />
+                      </a>
+                    </td>
+                    <td style="text-align:center">
+                      <button pButton type="button" class="tableAction tableAction--edit"
+                        rounded text (click)="openResourceModal(res)"><app-icon name="pencil" size="16" aria-hidden="true" /></button>
+                      <button pButton type="button" severity="danger"
+                        class="tableAction" rounded text (click)="deleteResource(res)"><app-icon name="trash-2" size="16" aria-hidden="true" /></button>
+                    </td>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                  <tr><td colspan="7" class="accordion__empty">
+                    <app-icon name="link" aria-hidden="true" />
+                    <p>Nenhum recurso cadastrado ainda.<br>
+                    Adicione links da Udemy, documentação oficial, simulados, labs e materiais de apoio.</p>
+                  </td></tr>
+                </ng-template>
+              </p-table>
+            </div>
+          </p-accordion-content>
+        </p-accordion-panel>
+
+        <!-- ⑤ Laboratórios Práticos ───────────────────────────────────────────── -->
+        <p-accordion-panel value="labs">
+          <p-accordion-header>
+            <span class="accordion__label">
+              <app-icon name="code" aria-hidden="true" />
+              Laboratórios Práticos
+              <span class="accordion__badge accordion__badge--soon">Em breve</span>
+            </span>
+          </p-accordion-header>
+          <p-accordion-content>
+            <div class="accordion__body">
+              <div class="labs__placeholder">
+                <div class="labs__icon">
+                  <app-icon name="monitor" aria-hidden="true" />
+                </div>
+                <h3 class="labs__title">Laboratórios Práticos</h3>
+                <p class="labs__desc">
+                  Execute experimentos práticos, valide arquiteturas e consolide o aprendizado de <strong>{{ topicLabel }}</strong> com labs estruturados.
+                </p>
+                <div class="labs__features">
+                  @for (feat of [
+                    {icon: 'pi-check-circle', text: 'Labs com objetivo definido'},
+                    {icon: 'pi-clock', text: 'Tempo estimado por lab'},
+                    {icon: 'pi-chart-bar', text: 'Rastreamento de progresso'},
+                    {icon: 'pi-link', text: 'Links para ambientes de prática'}
+                  ]; track feat.text) {
+                    <span class="labs__feature">
+                      <app-icon [name]="feat.icon" size="16" aria-hidden="true" />{{ feat.text }}
+                    </span>
+                  }
+                </div>
+                <button pButton type="button"
+                  severity="secondary" outlined disabled><app-icon name="plus" size="16" aria-hidden="true" /><span>Sugerir um lab</span></button>
+              </div>
+            </div>
+          </p-accordion-content>
+        </p-accordion-panel>
+
+        <!-- ⑥ Quiz de Revisão (Flashcards) ───────────────────────────────────── -->
+        <p-accordion-panel value="quiz">
+          <p-accordion-header>
+            <span class="accordion__label">
+              <app-icon name="circle-help" aria-hidden="true" />
+              Quiz de Revisão
+              @if (questions().length) {
+                <span class="accordion__count">{{ questions().length }} questões</span>
+              }
+            </span>
+          </p-accordion-header>
+          <p-accordion-content>
+            <div class="accordion__body">
+
+              @if (!questions().length) {
+                <div class="accordion__empty accordion__empty--inline">
+                  <app-icon name="circle-help" aria-hidden="true" />
+                  <p>Nenhuma questão cadastrada para este tópico ainda.</p>
+                </div>
+
+              } @else if (!quizStarted) {
+                <!-- Tela inicial do quiz -->
+                <div class="quiz__start">
+                  <div class="quiz__startInfo">
+                    <span class="quiz__startCount">{{ questions().length }}</span>
+                    <span class="quiz__startLabel">questões disponíveis</span>
+                  </div>
+                  <div class="quiz__startMeta">
+                    <div class="quiz__startMetaItem">
+                      <app-icon name="tag" aria-hidden="true" />
+                      <span>Tema: <strong>{{ item()!.courseName }}</strong></span>
+                    </div>
+                    <div class="quiz__startMetaItem">
+                      <app-icon name="chart-column" aria-hidden="true" />
+                      <span>Nível: <strong>{{ quizDifficultyLabel }}</strong></span>
+                    </div>
+                    <div class="quiz__startMetaItem">
+                      <app-icon name="clock" aria-hidden="true" />
+                      <span>Tempo estimado: <strong>{{ quizEstimatedMinutes }} min</strong></span>
+                    </div>
+                    <div class="quiz__startMetaItem">
+                      <app-icon name="circle-check" aria-hidden="true" />
+                      <span>Nota mínima: <strong>70%</strong></span>
+                    </div>
+                  </div>
+                  <button pButton type="button"
+                    class="btn btn--resource"
+                    [style.background]="accentColor"
+                    [style.border-color]="accentColor"
+                    (click)="startQuiz()"><app-icon name="play" size="16" aria-hidden="true" /><span>Iniciar Quiz</span></button>
+                </div>
+
+              } @else if (quizFinished) {
+                <!-- Resultado final -->
+                <div class="quiz__result">
+                  <div class="quiz__scoreCircle" [class.quiz__scoreCircle--pass]="quizScore >= 70">
+                    <span class="quiz__scoreNum">{{ quizScore }}%</span>
+                    <span class="quiz__scoreLabel">{{ quizScore >= 70 ? '✓ Aprovado' : '✗ Revisar' }}</span>
+                  </div>
+                  <div class="quiz__resultStats">
+                    <span class="quiz__stat quiz__stat--correct">
+                      <app-icon name="check" aria-hidden="true" /> {{ correctCount }} acertos
+                    </span>
+                    <span class="quiz__stat quiz__stat--wrong">
+                      <app-icon name="x" aria-hidden="true" /> {{ incorrectCount }} erros
+                    </span>
+                  </div>
+                  <button pButton type="button"
+                    severity="secondary" outlined (click)="restartQuiz()"><app-icon name="rotate-cw" size="16" aria-hidden="true" /><span>Refazer Quiz</span></button>
+                </div>
+
+              } @else if (currentQuestion) {
+                <!-- Flashcard ativo -->
+                <div class="quiz__progress">
+                  <p-progressBar [value]="(currentQuestionIndex / questions().length) * 100"
+                    [showValue]="false" [style]="{'height': '0.375rem'}" />
+                  <span class="quiz__progressLabel">
+                    {{ currentQuestionIndex + 1 }} / {{ questions().length }}
+                  </span>
+                </div>
+
+                <div class="flashcard" [class.flashcard--revealed]="revealed">
+                  <div class="flashcard__front">
+                    <div class="flashcard__meta">
+                      <p-tag [value]="currentQuestion.difficulty"
+                        [severity]="getDifficultyTag(currentQuestion.difficulty)" />
+                      @for (tag of currentQuestion.tags; track tag) {
+                        <span class="flashcard__tag">{{ tag }}</span>
+                      }
+                    </div>
+                    <p class="flashcard__question">{{ currentQuestion.question }}</p>
+                    @if (!revealed) {
+                      <button pButton type="button"
+                        severity="secondary" outlined class="flashcard__revealBtn"
+                        (click)="revealAnswer()"><app-icon name="eye" size="16" aria-hidden="true" /><span>Revelar Resposta</span></button>
+                    }
+                  </div>
+
+                  @if (revealed) {
+                    <div class="flashcard__answer">
+                      <span class="flashcard__answerLabel">Resposta</span>
+                      <p class="flashcard__answerText">{{ currentQuestion.answer }}</p>
+                      @if (currentQuestion.explanation) {
+                        <div class="flashcard__explanation">
+                          <app-icon name="info" aria-hidden="true" />
+                          {{ currentQuestion.explanation }}
+                        </div>
+                      }
+                      <div class="flashcard__actions">
+                        <button pButton type="button"
+                          severity="danger" outlined class="flashcard__wrong"
+                          (click)="answerQuiz(false)"><app-icon name="x" size="16" aria-hidden="true" /><span>Errei</span></button>
+                        <button pButton type="button"
+                          severity="success" class="flashcard__correct"
+                          (click)="answerQuiz(true)"><app-icon name="check" size="16" aria-hidden="true" /><span>Acertei</span></button>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+
+            </div>
+          </p-accordion-content>
+        </p-accordion-panel>
+
+        <!-- ⑦ Histórico de Sessões ────────────────────────────────────────────── -->
+        <p-accordion-panel value="history">
+          <p-accordion-header>
+            <span class="accordion__label">
+              <app-icon name="history" aria-hidden="true" />
+              Histórico de Sessões
+              @if (sessions().length) {
+                <span class="accordion__count">{{ sessions().length }}</span>
+              }
+            </span>
+          </p-accordion-header>
+          <p-accordion-content>
+            <div class="accordion__body">
+              <div class="accordion__toolbar">
+                <button pButton type="button"
+                  severity="secondary" outlined (click)="openSessionModal()"><app-icon name="circle-stop" size="16" aria-hidden="true" /><span>Encerrar sessão atual</span></button>
+                <span class="session__elapsed">
+                  <app-icon name="clock" aria-hidden="true" />
+                  Sessão em andamento: <strong>{{ elapsedLabel }}</strong>
+                </span>
+              </div>
+
+              <p-table [value]="sessions()" [paginator]="sessions().length > 5" [rows]="5"
+                [tableStyle]="{'min-width': '40rem'}">
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th pSortableColumn="createdAt" style="width:8rem">Data <p-sortIcon field="createdAt" /></th>
+                    <th style="width:6.5rem">Duração</th>
+                    <th pSortableColumn="topic">Tópico <p-sortIcon field="topic" /></th>
+                    <th>Observações</th>
+                    <th style="width:7.5rem;text-align:center">Avaliação</th>
+                    <th pSortableColumn="focus" style="width:5.5rem">Foco <p-sortIcon field="focus" /></th>
+                    <th style="width:5rem;text-align:center">Tendência</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-session let-rowIndex="rowIndex">
+                  <tr>
+                    <td>{{ session.createdAt | slice:0:10 }}</td>
+                    <td>{{ formatDuration(session.durationSeconds) }}</td>
+                    <td>{{ session.topic }}</td>
+                    <td class="notes__desc">{{ session.notes || '—' }}</td>
+                    <td style="text-align:center" class="session__stars">{{ ratingStars(session.rating) }}</td>
+                    <td>
+                      @if (session.focus) {
+                        <p-tag [value]="session.focus" [severity]="getFocusSeverity(session.focus)" />
+                      } @else { <span class="notes__noLink">—</span> }
+                    </td>
+                    <td style="text-align:center">
+                      @let trend = sessionTrend(rowIndex);
+                      @if (trend) {
+                        <span class="trend {{ trend.cls }}" [title]="trend.label">
+                          <app-icon [name]="trend.icon" size="16" aria-hidden="true" />
+                        </span>
+                      }
+                    </td>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                  <tr><td colspan="7" class="accordion__empty">
+                    <app-icon name="history" aria-hidden="true" />
+                    <p>Nenhuma sessão registrada. Clique em "Encerrar sessão atual" ao terminar de estudar.</p>
+                  </td></tr>
+                </ng-template>
+              </p-table>
+            </div>
+          </p-accordion-content>
+        </p-accordion-panel>
+
+      </p-accordion>
+    </main>
+
+    <!-- ─── Footer / Voltar ────────────────────────────────────────────────────── -->
+    <footer class="courseDetail__footer">
+      <a class="btn btn--back" [routerLink]="backRoute" styleClass="btn-accent-outline">
+        <app-icon name="arrow-left" aria-hidden="true" />
+        Voltar para {{ topicLabel }}
+      </a>
+    </footer>
+
+  }
+</div>
+
+<!-- ── Modal: Nova / Editar Anotação ────────────────────────────────────────── -->
+<p-dialog [(visible)]="noteModalVisible" [modal]="true" [draggable]="false" [resizable]="false"
+  [style]="{'width': '34rem'}" [header]="editingNote ? 'Editar anotação' : 'Nova anotação'"
+  styleClass="studyModal">
+  <form class="form" (ngSubmit)="saveNote()">
+    <div class="form__row">
+      <label class="field">
+        <span>Data</span>
+        <input pInputText type="date" [(ngModel)]="noteForm.date" name="date" />
+      </label>
+      <label class="field">
+        <span>Progresso</span>
+        <div class="field__slider">
+          <p-slider [(ngModel)]="noteForm.progress" name="progress" [min]="0" [max]="100" />
+          <span class="field__sliderVal">{{ noteForm.progress }}%</span>
+        </div>
+      </label>
+    </div>
+    <div class="form__row">
+      <label class="field">
+        <span>Tipo</span>
+        <select class="field__select" [(ngModel)]="noteForm.type" name="type">
+          @for (t of noteTypeOptions; track t) {
+            <option [value]="t">{{ t }}</option>
+          }
+        </select>
+      </label>
+      <label class="field">
+        <span>Status</span>
+        <select class="field__select" [(ngModel)]="noteForm.status" name="status">
+          @for (s of noteStatusOptions; track s) {
+            <option [value]="s">{{ s }}</option>
+          }
+        </select>
+      </label>
+    </div>
+    <label class="field">
+      <span>Título</span>
+      <input pInputText type="text" [(ngModel)]="noteForm.title" name="title" placeholder="Ex: Tipos de instâncias EC2" />
+    </label>
+    <label class="field">
+      <span>Descrição / Resumo</span>
+      <textarea pTextarea [autoResize]="true" rows="4" [(ngModel)]="noteForm.description"
+        name="description" placeholder="Seus pontos-chave e resumo desta sessão..."></textarea>
+    </label>
+    <label class="field">
+      <span>Link de referência (opcional)</span>
+      <input pInputText type="url" [(ngModel)]="noteForm.link" name="link" placeholder="https://..." />
+    </label>
+    <footer class="formActions">
+      <button pButton type="button" label="Cancelar" severity="secondary" outlined (click)="noteModalVisible = false"></button>
+      <button pButton type="submit" styleClass="btn-accent-outline" [disabled]="savingNote()">
+        @if (savingNote()) {
+          <app-icon name="loader-circle" size="16" [spin]="true" aria-hidden="true" />
+        } @else {
+          <app-icon name="check" size="16" aria-hidden="true" />
+        }
+        <span>{{ editingNote ? 'Atualizar' : 'Salvar' }}</span>
+      </button>
+    </footer>
+  </form>
+</p-dialog>
+
+<!-- ── Modal: Novo / Editar Recurso ─────────────────────────────────────────── -->
+<p-dialog [(visible)]="resourceModalVisible" [modal]="true" [draggable]="false" [resizable]="false"
+  [style]="{'width': '36rem'}" [header]="editingResource ? 'Editar recurso' : 'Adicionar recurso'"
+  styleClass="studyModal">
+  <form class="form" (ngSubmit)="saveResource()">
+    <div class="form__row">
+      <label class="field">
+        <span>Tipo</span>
+        <select class="field__select" [(ngModel)]="resourceForm.type" name="type">
+          @for (t of resourceTypeOptions; track t) {
+            <option [value]="t">{{ t }}</option>
+          }
+        </select>
+      </label>
+      <label class="field field--grow">
+        <span>Nome</span>
+        <input pInputText type="text" [(ngModel)]="resourceForm.title" name="title" placeholder="Ex: Documentação oficial AWS EC2" />
+      </label>
+    </div>
+    <label class="field">
+      <span>URL</span>
+      <input pInputText type="url" [(ngModel)]="resourceForm.url" name="url" placeholder="https://..." />
+    </label>
+    <div class="form__row">
+      <label class="field">
+        <span>Fonte</span>
+        <input pInputText type="text" [(ngModel)]="resourceForm.source" name="source" placeholder="Ex: AWS, Udemy, YouTube" />
+      </label>
+      <label class="field">
+        <span>Descrição (opcional)</span>
+        <input pInputText type="text" [(ngModel)]="resourceForm.description" name="description" placeholder="Breve descrição" />
+      </label>
+    </div>
+    <div class="form__row">
+      <label class="field">
+        <span>Prioridade</span>
+        <select class="field__select" [(ngModel)]="resourceForm.priority" name="priority">
+          @for (p of resourcePriorityOptions; track p) {
+            <option [value]="p">{{ p }}</option>
+          }
+        </select>
+      </label>
+      <label class="field">
+        <span>Status</span>
+        <select class="field__select" [(ngModel)]="resourceForm.resourceStatus" name="resourceStatus">
+          @for (s of resourceStatusOptions; track s) {
+            <option [value]="s">{{ s }}</option>
+          }
+        </select>
+      </label>
+    </div>
+    <footer class="formActions">
+      <button pButton type="button" label="Cancelar" severity="secondary" outlined (click)="resourceModalVisible = false"></button>
+      <button pButton type="submit" styleClass="btn-accent-outline" [disabled]="savingResource()">
+        @if (savingResource()) {
+          <app-icon name="loader-circle" size="16" [spin]="true" aria-hidden="true" />
+        } @else {
+          <app-icon name="check" size="16" aria-hidden="true" />
+        }
+        <span>{{ editingResource ? 'Atualizar' : 'Salvar' }}</span>
+      </button>
+    </footer>
+  </form>
+</p-dialog>
+
+<!-- ── Modal: Encerrar Sessão ────────────────────────────────────────────────── -->
+<p-dialog [(visible)]="sessionModalVisible" [modal]="true" [draggable]="false" [resizable]="false"
+  [style]="{'width': '28rem'}" header="Encerrar sessão de estudo" styleClass="studyModal">
+  <form class="form" (ngSubmit)="saveSession()">
+    <div class="session__summaryBox">
+      <app-icon name="clock" aria-hidden="true" />
+      <div>
+        <span class="session__summaryLabel">Duração da sessão</span>
+        <span class="session__summaryValue">{{ elapsedLabel }}</span>
+      </div>
+      <div>
+        <span class="session__summaryLabel">Marcos concluídos</span>
+        <span class="session__summaryValue">{{ milestones().filter(m => m.completed).length }} / {{ milestones().length }}</span>
+      </div>
+    </div>
+    <div class="form__row">
+      <label class="field">
+        <span>Como foi a sessão? <small>(1–5 ⭐)</small></span>
+        <div class="session__ratingRow">
+          @for (star of [1,2,3,4,5]; track star) {
+            <button type="button" class="session__star"
+              [class.session__star--active]="star <= sessionRating"
+              (click)="sessionRating = star">★</button>
+          }
+        </div>
+      </label>
+      <label class="field">
+        <span>Nível de foco</span>
+        <select class="field__select" [(ngModel)]="sessionFocus" name="focus">
+          @for (f of focusOptions; track f) {
+            <option [value]="f">{{ f }}</option>
+          }
+        </select>
+      </label>
+    </div>
+    <label class="field">
+      <span>Observações (opcional)</span>
+      <textarea pTextarea [autoResize]="true" rows="3" [(ngModel)]="sessionNotes"
+        name="notes" placeholder="O que você aprendeu? Onde teve dificuldade?"></textarea>
+    </label>
+    <footer class="formActions">
+      <button pButton type="button" label="Cancelar" severity="secondary" outlined (click)="sessionModalVisible = false; startSession()"></button>
+      <button pButton type="submit" styleClass="btn-accent-outline" [disabled]="savingSession()">
+        @if (savingSession()) {
+          <app-icon name="loader-circle" size="16" [spin]="true" aria-hidden="true" />
+        } @else {
+          <app-icon name="check" size="16" aria-hidden="true" />
+        }
+        <span>Salvar sessão</span>
+      </button>
+    </footer>
+  </form>
+</p-dialog>
